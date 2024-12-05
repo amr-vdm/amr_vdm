@@ -1,5 +1,5 @@
-left_vector_length: 0.1
-right_vector_length: 0.1
+left_vector_length: 0.15
+right_vector_length: 0.15
 pattern_angle_between_lr: 0
 distance_tolerance: 0.1
 detect_angle_tolerance: 0.15

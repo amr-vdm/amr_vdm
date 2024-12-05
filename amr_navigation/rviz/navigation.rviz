@@ -4,13 +4,11 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
         - /Grid1/Offset1
-        - /TF1/Frames1
         - /TF1/Tree1
-        - /Global Map1/Full Plan1
-      Splitter Ratio: 0.6705882549285889
-    Tree Height: 360
+        - /Controller1/DWB1
+      Splitter Ratio: 0.8323529362678528
+    Tree Height: 784
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -29,8 +27,6 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: FrontScan
-  - Class: waypoint_manager/WaypointManagerPlugin
-    Name: WaypointManagerPlugin
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -106,7 +102,7 @@ Visualization Manager:
         back_camera_infra2_optical_frame:
           Value: false
         back_camera_link:
-          Value: false
+          Value: true
         back_laser_link:
           Value: true
         base_footprint:
@@ -114,9 +110,9 @@ Visualization Manager:
         base_link:
           Value: false
         caster_base_link:
-          Value: true
-        caster_support_link:
           Value: false
+        caster_support_link:
+          Value: true
         caster_wheel_link:
           Value: true
         front_camera_accel_frame:
@@ -146,9 +142,9 @@ Visualization Manager:
         front_camera_infra2_optical_frame:
           Value: false
         front_camera_link:
-          Value: false
+          Value: true
         front_laser_link:
-          Value: false
+          Value: true
         imu_link:
           Value: false
         left_wheel_link:
@@ -166,7 +162,7 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Tree:
         map:
           odom:
@@ -275,55 +271,68 @@ Visualization Manager:
           Topic: /move_base_node/ThetaStarPlanner/smooth_path
           Unreliable: false
           Value: true
-      Enabled: true
-      Name: Global Map
-    - Class: rviz/Group
-      Displays:
-        - Alpha: 0.699999988079071
-          Class: rviz/Map
-          Color Scheme: costmap
-          Draw Behind: false
-          Enabled: true
-          Name: Costmap
-          Topic: move_base_node/local_costmap/costmap
-          Unreliable: false
-          Use Timestamp: false
-          Value: true
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz/Path
-          Color: 0; 12; 255
-          Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.30000001192092896
-          Line Style: Billboards
-          Line Width: 0.05000000074505806
-          Name: Local Plan (MiR)
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: None
-          Queue Size: 10
-          Radius: 0.029999999329447746
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
-          Topic: /move_base_node/RotationShimController/DWBController/local_plan
-          Unreliable: false
-          Value: true
         - Alpha: 1
           Class: rviz/Polygon
-          Color: 25; 255; 0
+          Color: 255; 0; 0
           Enabled: true
           Name: Footprint
           Queue Size: 10
-          Topic: move_base_node/local_costmap/footprint
+          Topic: move_base_node/global_costmap/footprint
           Unreliable: false
           Value: true
       Enabled: true
-      Name: Local Map
+      Name: Planner
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Group
+          Displays:
+            - Alpha: 1
+              Buffer Length: 1
+              Class: rviz/Path
+              Color: 92; 53; 102
+              Enabled: true
+              Head Diameter: 0.30000001192092896
+              Head Length: 0.20000000298023224
+              Length: 0.30000001192092896
+              Line Style: Lines
+              Line Width: 0.029999999329447746
+              Name: Path
+              Offset:
+                X: 0
+                Y: 0
+                Z: 0
+              Pose Color: 255; 85; 255
+              Pose Style: None
+              Queue Size: 10
+              Radius: 0.029999999329447746
+              Shaft Diameter: 0.10000000149011612
+              Shaft Length: 0.10000000149011612
+              Topic: /move_base_node/RotationShimController/DWBController/local_plan
+              Unreliable: false
+              Value: true
+            - Alpha: 1
+              Class: rviz/Polygon
+              Color: 25; 255; 0
+              Enabled: true
+              Name: Polygon
+              Queue Size: 10
+              Topic: /move_base_node/global_costmap/footprint
+              Unreliable: false
+              Value: true
+            - Alpha: 0.699999988079071
+              Class: rviz/Map
+              Color Scheme: costmap
+              Draw Behind: true
+              Enabled: true
+              Name: Costmap
+              Topic: /move_base_node/local_costmap/costmap
+              Unreliable: false
+              Use Timestamp: false
+              Value: true
+          Enabled: true
+          Name: DWB
+      Enabled: true
+      Name: Controller
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -364,7 +373,7 @@ Visualization Manager:
       Color: 204; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 204; 0; 0
       Min Color: 239; 41; 41
@@ -379,6 +388,41 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/PoseArray
+      Color: 255; 25; 0
+      Enabled: false
+      Head Length: 0.20000000298023224
+      Head Radius: 0.15000000596046448
+      Name: PoseArray
+      Queue Size: 10
+      Shaft Length: 0.5
+      Shaft Radius: 0.03999999910593033
+      Shape: Arrow (3D)
+      Topic: /amr_goal_array
+      Unreliable: false
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /move_base_node/RotationShimController/rotation_checker_marker
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: ""
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
@@ -406,7 +450,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -0.005001739598810673
+      Angle: -34.544822692871094
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -416,10 +460,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 21.108930587768555
-      Target Frame: base_link
-      X: 10.330059051513672
-      Y: -8.981369972229004
+      Scale: -34.70115280151367
+      Target Frame: base_footprint
+      X: 6.571192264556885
+      Y: -0.1484518200159073
     Saved: ~
 Window Geometry:
   Displays:
@@ -427,7 +471,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: true
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001560000039efc0200000006fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d0000039e000000c900fffffffb0000002a0057006100790070006f0069006e0074004d0061006e00610067006500720050006c007500670069006e00000002ff000000dc000000dc00ffffff00000001000001000000039efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000039e000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a0000003bc00fffffffb0000000800540069006d00650100000000000004500000000000000000000003bc0000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001560000039efc0200000005fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d0000039e000000c900ffffff00000001000001000000039efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000039e000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a0000003bc00fffffffb0000000800540069006d006501000000000000045000000000000000000000039c0000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -436,8 +480,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  WaypointManagerPlugin:
-    collapsed: false
-  Width: 956
-  X: 964
+  Width: 924
+  X: 996
   Y: 27

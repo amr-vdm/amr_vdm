@@ -1,5 +1,5 @@
-pattern_length_vector_b: 0.07
-pattern_length_vector_c: 0.07
+pattern_length_vector_b: 0.05
+pattern_length_vector_c: 0.05
 pattern_angle_bc: 0
 angle_tolerance: 0.15
 angle_threshold: 0.5

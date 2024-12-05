@@ -1,12 +1,12 @@
 <launch>
-  <arg name="robot_x"                default="-2.0" />
+  <arg name="robot_x"                default="0.0" />
   <arg name="robot_y"                default="0.0" />
   <arg name="robot_yaw"              default="0.0" />
   <arg name="use_sim"                default="false"/>
   <arg name="rviz_file"              default="$(find amr_navigation)/rviz/navigation_sim.rviz"/>
   <arg name="controller"             default="rs"/>
-  <arg name="planner"                default="navfn"/>
-  <arg name="map_file"               default="$(find amr_gazebo)/maps/simulation/test.yaml"/>
+  <arg name="planner"                default="thetas"/>
+  <arg name="map_file"               default="$(find amr_gazebo)/maps/simulation/small_warehouse/map.yaml"/>
   <arg name="virtual_walls_map_file" default="$(find amr_gazebo)/maps/maze_virtual_walls.yaml"/>
   <arg name="with_virtual_walls"     default="false" />
 

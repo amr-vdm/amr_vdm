@@ -1,77 +1,101 @@
 #!/usr/bin/env python3
 import rospy
+import math
 import dynamic_reconfigure.client as dc
 
-from std_msgs.msg import Float32, Bool
-from speed_filter_msgs.msg import SpeedLimit
-
+from std_msgs.msg import Bool,Int16, Float32
 
 class SpeedFilter():
 
     def __init__(self):
 
-        self.max_velocity_ = rospy.get_param("~max_velocity", 0.7)
+        # Get params from server
+        self.pub_frequency = rospy.get_param("~pub_frequency", 5)
+        self.max_speed = rospy.get_param("~max_speed", 0.7)
 
-        # Setup loop frequency
-        self.loop_freq_ = 5.0
+        self.rate = rospy.Rate(self.pub_frequency)
 
-        # self.update_velocity_ = dc.Client("/move_base_node/RotationShimController/VectorPursuitController")
-        self.update_velocity_ = dc.Client("/move_base_node/RotationShimController/TebLocalPlannerROS")
+        # self.client_velocity = dc.Client("/move_base_node/RotationShimController/DWBController")
+        # self.client_velocity = dc.Client("/move_base_node/RotationShimController/VectorPursuitController")
+        self.client_velocity = dc.Client("/move_base_node/RotationShimController/TebLocalPlannerROS")
+        
+        # Move base dynamic reconfigure:
 
-        self.is_running_ = False
-        self.current_speed_limit_ = 1.0
-        self.prev_current_speed_limit_ = 1.0
-        self.speed_at_field_ = 1.0
-        self.speed_limit_ = 1.0
-    
+        # DWB local planner dynamic reconfigure
+        # self.DWB_normal_vel = {'max_speed_xy': 0.7,'max_vel_x': 0.7}
+
+        # TEB local planner dynamic reconfigure
+        # self.TEB_normal_vel = {'max_vel_x': 0.7, 'max_vel_x_backwards': 0.25, 'max_vel_theta': 0.7}
+
+        # Avariables:
+        # self.state_runonceNAV = False
+        # self.Pause_AMR_state = False
+        self.speed_limit_lane = self.max_speed
+        self.speed_limit_safety = self.max_speed
+        self.current_speed = self.max_speed
+
         # Subscribers:
-        rospy.Subscriber("/speed_limit", SpeedLimit, self.speed_limit_callback)
-        rospy.Subscriber("speed_at_field", Float32, self.speed_at_field_callback)
-        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
-    
-    def runonce_callback(self,msg: Bool):
-        self.is_running_ = msg.data
-    
-    def speed_at_field_callback(self, msg:Float32):
-        self.speed_at_field_ = msg.data
+        rospy.Subscriber("speed_limit_lane", Float32, self.speed_limit_lane_cb)
+        rospy.Subscriber("speed_limit_safety", Float32, self.speed_limit_safety_cb)
+        # rospy.Subscriber("state_runonce_nav", Bool, self.runOnceStateCb)
+        # rospy.Subscriber('PAUSE_AMR', Bool, self.pauseAMRCb)
 
-    def update_velocity(self, speed_limit_per):
-        # self.update_velocity_.update_configuration({'desired_linear_vel': self.max_velocity_*speed_limit_per})
-        self.update_velocity_.update_configuration({'max_vel_x': self.max_velocity_*speed_limit_per})
-        rospy.loginfo((f"Updated velocity to {round(self.max_velocity_ * speed_limit_per, 2)}m/s "
-                       f"from max velocity is {self.max_velocity_}m/s."))
+    # def runOnceStateCb(self,msg: Bool):
+    #     self.state_runonceNAV = msg.data
 
-    def speed_limit_callback(self, msg:SpeedLimit):
-        self.speed_limit_ = msg.speed_limit
+    # def pauseAMRCb(self,msg: Bool):
+    #     self.Pause_AMR_state = msg.data
+
+
+
+    def speed_limit_lane_cb(self, msg: Float32):
+        self.speed_limit_lane = round(msg.data,2)
+        # if (self.speed_limit_lane <= self.max_speed
+        #     and self.speed_limit_lane < self.speed_limit_safety):
+        #     self.configureVelocity(self.speed_limit_lane)
+        
+        # elif self.speed_limit_lane > self.max_speed:
+        #     self.speed_limit_lane = self.max_speed
+
+    def speed_limit_safety_cb(self, msg: Float32):
+        self.speed_limit_safety = round(msg.data,2)
+        # if (self.speed_limit_safety <= self.max_speed
+        #     and self.speed_limit_safety < self.speed_limit_lane):
+        #     self.configureVelocity(self.speed_limit_safety)
+        
+        # elif self.speed_limit_safety > self.max_speed:
+        #     self.speed_limit_safety = self.max_speed
+
+    def configureVelocity(self,speed: float):
+        # if self.Pause_AMR_state:
+        #     return
+        acc_speed = speed * 2 + 0.1
+        acc_theta = speed * 2 + 0.6
+        DWB_vel = {'max_speed_xy': speed,'max_vel_x': speed,'max_vel_theta': 1.2*speed,
+                   'acc_lim_x': acc_speed, 'decel_lim_x': -acc_speed,
+                   'acc_lim_theta': acc_theta,'decel_lim_theta': -acc_theta}
+        # DWB_vel = {'max_speed_xy': speed,'max_vel_x': speed}
+        VPP_vel = {'desired_linear_vel': speed}
+        TEB_vel = {'max_vel_x': speed}
+        # self.client_velocity.update_configuration(DWB_vel)
+        # self.client_velocity.update_configuration(VPP_vel)
+        self.client_velocity.update_configuration(TEB_vel)
 
     def run(self):
         while not rospy.is_shutdown():
-            if self.is_running_:
-                if (self.speed_at_field_ <= 0.95 or self.speed_limit_ <= 0.95):    
-                    if self.speed_at_field_ <= self.speed_limit_:
-                        speed_limit_per = self.speed_at_field_
-                    else:
-                        speed_limit_per = self.speed_limit_
-                else:
-                    speed_limit_per = 1.0
-                
-                self.current_speed_limit_ = speed_limit_per
-
-                if self.current_speed_limit_ != self.prev_current_speed_limit_:
-                    self.update_velocity(speed_limit_per)
-                
-                self.prev_current_speed_limit_ = self.current_speed_limit_
-            
-            rospy.sleep(1/self.loop_freq_)
-        
+            speed = min(self.speed_limit_lane, self.speed_limit_safety, self.max_speed)
+            if self.current_speed != speed:
+                self.current_speed = speed
+                self.configureVelocity(self.current_speed)
+                print('New speed configure: ', self.current_speed)
+            self.rate.sleep()
 
 if __name__== '__main__':
     rospy.init_node("speed_filter")
     try:
         speed_filter = SpeedFilter()
-        rospy.loginfo("SpeedFilter node is running!")
+        rospy.loginfo("%s node is running!", rospy.get_name())
         speed_filter.run()
         
     except rospy.ROSInterruptException:
         pass
-        

@@ -4,7 +4,8 @@
   <arg name="robot_y"    default="0.0" />
   <arg name="robot_yaw"  default="0.0" />
   <arg name="gui"        default="true" />
-  <arg name="world_name" default="worlds/empty.world"/>
+  <!-- <arg name="world_name" default="worlds/empty.world"/> -->
+  <arg name="world_name" default="$(find aws_robomaker_small_warehouse_world)/worlds/small_warehouse.world"/>
   <arg name="model_name" default="amr" doc="Name of the Gazebo robot model (needs to be different for each robot)" />
 
   <!-- Load URDF -->
@@ -22,7 +23,7 @@
   </include>
 
   <!--=== Spwan world in gazebo ===-->
-  <include file="$(find amr_gazebo)/launch/spawn_world.launch.xml" />
+  <!-- <include file="$(find amr_gazebo)/launch/spawn_world.launch.xml" /> -->
 
   <!-- <include file="$(find amr_gazebo)/launch/spawn_model.launch">
     <arg name="tag_x" default="3.8"/>

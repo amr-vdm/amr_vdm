@@ -1,0 +1,6 @@
+uint8 mode
+uint8 MODE_IDLE = 0
+uint8 MODE_CHARGE = 1
+uint8 MODE_PICKUP = 2
+uint8 MODE_DROPOFF = 3
+uint8 MODE_UNDOCK = 4

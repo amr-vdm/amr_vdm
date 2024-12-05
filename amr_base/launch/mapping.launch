@@ -45,8 +45,9 @@
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
         output="screen" ns ="$(arg namespace)"/>
 
-    <!-- LAUNCH GMAPPING NODE -->
+    <!-- LAUNCH MAPPING NODE -->
     <include file="$(find amr_mapping)/launch/slam_gmapping.launch" />
+    <!-- <include file="$(find amr_mapping)/launch/hector_mapping.launch" /> -->
 
     <!--=== LAUNCH OTHER NODES ===-->
 
@@ -75,7 +76,7 @@
 
     <!-- IMU & IMU FILTER -->
     <include file="$(find amr_base)/launch/microstrain.launch">
-        <arg name="params_file" value="/home/amr/catkin_ws/src/amr_vdm/amr_base/config/imu_params.yml" />
+        <arg name="params_file" value="/home/amr/catkin_ws/src/amr/amr_base/config/imu_params.yml" />
     </include>
 
     <include file="$(find imu_filter_madgwick)/launch/imu_filter_madgwick.launch"/>
@@ -96,8 +97,5 @@
       <arg name="controller_name" value="$(arg controller_name)"/>
       <arg name="use_virtual_wall" value="$(arg use_virtual_wall)" />
     </include> -->
-
-    <!-- Launch smoother velocity -->
-    <!-- <include file="$(find amr_navigation)/launch/velocity_smoother.launch"/> -->
 
 </launch>

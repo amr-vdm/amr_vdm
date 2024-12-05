@@ -9,7 +9,7 @@ import geometry_msgs.msg
 from laser_line_extraction.msg import LineSegmentList
 
 
-class FindLastTF():
+class FindTF():
 
     def __init__(self):
 
@@ -148,8 +148,8 @@ class FindLastTF():
 if __name__== '__main__':
     rospy.init_node("find_last_tf")
     try:
-        find_tf = FindLastTF()
-        rospy.loginfo("FindLastTF node is running!")
+        find_tf = FindTF()
+        rospy.loginfo("%s node is running!", rospy.get_name())
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

@@ -1,6 +1,6 @@
 base_global_planner: SBPLLatticePlanner
 SBPLLatticePlanner:
-  primitive_filename: /home/amr/catkin_ws/src/amr_vdm/amr_navigation/mprim/unicycle_highcost_5cm.mprim
+  primitive_filename: /home/amr/catkin_ws/src/amr/amr_navigation/mprim/unicycle_highcost_5cm.mprim
   environment_type: XYThetaLattice
   planner_type: ARAPlanner
   allocated_time: 1.0

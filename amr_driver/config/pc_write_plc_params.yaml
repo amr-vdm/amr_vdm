@@ -2,7 +2,8 @@ PLC_port: 8002
 PLC_IP_address: '192.168.0.250'
 obstacle_detecting_bit: M4
 safety_zone_bit: M28                  # M28 - safety zone 1, M29 - safety zone 2
-initialpose_bit: M406 
+initialpose_bit: M406
+initialposeError_bit: M416 
 brake_bit: M161                       # M161 - left motor brake, M162 - right motor brake
 runonce_bit: M8
 start_bit: M405
@@ -13,3 +14,4 @@ go_in_silder_bit: M150
 server_cancel_bit: M40
 reset_amr_bit: M413
 wait_dock_bit: M24
+pause_server_bit: M54

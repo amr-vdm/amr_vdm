@@ -1,25 +1,15 @@
 ######################################################################
 # GOAL
-## docking waypoint heading to the charging station
 # Mode docking
-uint8 mode
-uint8 MODE_IDLE = 0
-uint8 MODE_CHARGE = 1
-uint8 MODE_PICKUP = 2
-uint8 MODE_DROPOFF = 3
-uint8 MODE_UNDOCK = 4
-
 string dock_name
-uint8[] tag_ids
-int16 angle_to_dock
-int16 correction_angle
-float32 distance_go_out
+amr_msgs/DockMode dock_mode
+amr_msgs/DockLimit dock_limit
+string[] tag_names
+amr_msgs/DockParam[] go_in_dock
+amr_msgs/DockParam[] go_out_dock
 
-# 1 - Counter clockwise, 2 - Clockwise
-uint8 rotate_type
-uint8 BOTH = 0
-uint8 ONLY_LEFT = 1
-uint8 ONLY_RIGHT = 2 
+# Pose of dock
+geometry_msgs/PoseStamped dock_pose
 
 ---
 ######################################################################
@@ -54,7 +44,8 @@ uint8 STATE_GO_OUT_DOCK = 8
 uint8 STATE_ACTIVATE_CHARGER = 9
 uint8 STATE_SUCCESS = 10
 uint8 STATE_RETRY = 11
-uint8 STATE_PAUSE = 12
-uint8 STATE_CANCEL = 13
+uint8 STATE_RETRY_HIGH_CURRENT = 12
+uint8 STATE_PAUSE = 13
+uint8 STATE_CANCEL = 14
 
 uint8 state

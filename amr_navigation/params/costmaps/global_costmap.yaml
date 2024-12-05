@@ -10,13 +10,12 @@ global_costmap:
   z_voxels: 10
   inflation:
     cost_scaling_factor:  3.0  # Exponential rate at which the obstacle cost drops off (default: 10). Must be chosen so that the cost value is > 0 at robot's circumscribed radius.
-    inflation_radius:     0.6 #0.955 # Max. distance from an obstacle at which costs are incurred for planning paths. Must be > robot's circumscribed radius.
+    inflation_radius:     0.65 #0.955 # Max. distance from an obstacle at which costs are incurred for planning paths. Must be > robot's circumscribed radius.
 
   plugins:
-    - {name: navigation_map,    type: "costmap_2d::StaticLayer" }
-    - {name: obstacles,         type: "costmap_2d::VoxelLayer" }
-    - {name: disable_obstacle,  type: "costmap_2d::ObstacleFilter" }
-    - {name: speed_filter,      type: "costmap_2d::SpeedFilter" }
-    - {name: binary_filter,     type: "costmap_2d::BinaryFilter" }
+    - {name: navigation_map, type: "costmap_2d::StaticLayer" }
+    - {name: obstacle_filter,  type: "costmap_2d::ObstacleFilter" }
+    - {name: binary_filter,  type: "costmap_2d::BinaryFilter" }
+    - {name: obstacles,  type: "costmap_2d::VoxelLayer" }
     - {name: virtual_walls_map, type: "costmap_2d::StaticLayer" }
-    - {name: inflation,         type: "costmap_2d::InflationLayer" }
+    - {name: inflation,  type: "costmap_2d::InflationLayer" }

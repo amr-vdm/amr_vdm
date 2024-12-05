@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 catkin_package(
+  INCLUDE_DIRS include
   CATKIN_DEPENDS
     geometry_msgs
     rospy_message_converter
@@ -40,6 +41,9 @@ catkin_install_python(PROGRAMS
 ###########
 ## Build ##
 ###########
+
+add_executable(obstacle_detection_node src/obstacle_detection_node.cpp)
+target_link_libraries(obstacle_detection_node ${catkin_LIBRARIES})
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations

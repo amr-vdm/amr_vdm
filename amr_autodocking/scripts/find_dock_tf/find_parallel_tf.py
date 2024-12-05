@@ -9,7 +9,7 @@ import geometry_msgs.msg
 from laser_line_extraction.msg import LineSegmentList
 
 
-class FindParallelTF():
+class FindDockTF():
 
     def __init__(self):
 
@@ -138,8 +138,8 @@ class FindParallelTF():
 if __name__== '__main__':
     rospy.init_node("find_parallel_tf")
     try:
-        find_dock_tf = FindParallelTF()
-        rospy.loginfo("FindParallelTF is running!")
+        find_dock_tf = FindDockTF()
+        rospy.loginfo("%s is running!", rospy.get_name())
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

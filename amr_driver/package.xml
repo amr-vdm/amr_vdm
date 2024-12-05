@@ -27,6 +27,7 @@
   <depend>amr_autodocking</depend>
 
   <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>roscpp</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

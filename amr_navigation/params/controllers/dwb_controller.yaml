@@ -4,11 +4,11 @@ DWBController:
   debug_trajectory_details: True
   min_vel_x: 0.0
   min_vel_y: 0.0
-  max_vel_x: 0.7
+  max_vel_x: 0.75
   max_vel_y: 0.0
-  max_vel_theta: 0.7
+  max_vel_theta: 1.0
   min_speed_xy: 0.0
-  max_speed_xy: 0.7
+  max_speed_xy: 0.75
   min_speed_theta: 0.0
   acc_lim_x: 1.5
   acc_lim_y: 0.0
@@ -28,7 +28,7 @@ DWBController:
   stateful: True
   GoalChecker:
     controller_frequency: 20.0
-    goal_angular_vel_scaling_angle: 15.0
+    goal_angular_vel_scaling_angle: 0.26
     goal_angle_scaling_factor: 0.8
     rotate_to_goal_max_angular_vel: 0.4
     rotate_to_goal_min_angular_vel: 0.1

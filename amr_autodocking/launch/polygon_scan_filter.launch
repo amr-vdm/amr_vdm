@@ -1,13 +1,19 @@
 <launch>
       <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="back_scanner_filter">
-            <remap from="scan" to="/back_scan_rep117"/>
-            <remap from="scan_filtered" to="back_scan_filter"/>
-            <rosparam command="load" file="$(find amr_autodocking)/config/back_scan_filter.yaml" />
+            <rosparam command="load" file="$(find amr_autodocking)/config/back_scan_filter_params.yaml"/>
+            <remap from="scan"          to="/back_scan_rep117" />
+            <remap from="scan_filtered" to="back_scan_filter" />
       </node>
 
       <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="front_scanner_filter">
-            <rosparam command="load" file="$(find amr_autodocking)/config/front_scan_filter.yaml"/>
+            <rosparam command="load" file="$(find amr_autodocking)/config/front_scan_filter_params.yaml"/>
             <remap from="scan"          to="/front_scan_rep117"/>
             <remap from="scan_filtered" to="front_scan_filter"/>
+      </node>
+
+      <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="front_depth_scan_filter">
+            <rosparam command="load" file="$(find amr_autodocking)/config/front_depth_scan_filter.yaml"/>
+            <remap from="scan"          to="/front_camera/depth_scan"/>
+            <remap from="scan_filtered" to="/front_camera/front_scan_filter"/>
       </node>
 </launch>

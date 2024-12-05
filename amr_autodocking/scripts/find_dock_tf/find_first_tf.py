@@ -9,7 +9,7 @@ import geometry_msgs.msg
 from laser_line_extraction.msg import LineSegmentList
 
 
-class FindFirstTF():
+class FindTF():
 
     def __init__(self):
 
@@ -126,7 +126,9 @@ class FindFirstTF():
                                 if (abs(distance_da - self.pattern_dis_ad) <= 0.08):
                                     vector_a = list_line_segments_raw[i]
                                     vector_d = list_line_segments_raw[j]
-                                    # print("Find vector a and d success!!!")
+                                    print("Found vector a and d success!!!")
+                                    print(f"a angle: {vector_a.angle}")
+                                    print(f"d angle: {vector_d.angle}")
                                     list_line_segments_ad.append([vector_a,vector_d])
                                     check_angle_ad = True
 
@@ -134,7 +136,9 @@ class FindFirstTF():
                                 if (abs(distance_ad - self.pattern_dis_ad) <= 0.08):
                                     vector_a = list_line_segments_raw[j]
                                     vector_d = list_line_segments_raw[i]
-                                    # print("Found vetor a and d success!!!")
+                                    print("Found vector a and d success!!!")
+                                    print(f"a angle: {vector_a.angle}")
+                                    print(f"d angle: {vector_d.angle}")
                                     list_line_segments_ad.append([vector_a,vector_d])
                                     check_angle_ad = True
                         # else: print('khong co a,d')
@@ -213,8 +217,8 @@ class FindFirstTF():
 if __name__== '__main__':
     rospy.init_node("find_first_tf")
     try:
-        find_tf = FindFirstTF()
-        rospy.loginfo("FindFirstTF node is running!")
+        find_tf = FindTF()
+        rospy.loginfo("%s node is running!", rospy.get_name())
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

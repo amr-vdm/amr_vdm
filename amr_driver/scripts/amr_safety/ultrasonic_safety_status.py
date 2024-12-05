@@ -2,100 +2,95 @@
 import rospy
 
 from sensor_msgs.msg import Range
-from std_msgs.msg import Bool
+from std_msgs.msg import Int16, Bool
 from amr_msgs.msg import SafetyStatusStamped, SafetyStatus, SafetyZone
+
 
 class UltrasonicSafety():
 
     def __init__(self):
         
         # Params
-        self.default_distance_ = 0.3
-        self.small_distance_   = 0.075
-        
-        # Setup loop frequency
-        self.loop_freq_ = 5.0
+        self.big_distance   = 0.3
+        self.small_distance = 0.075
+
+        self.rate = rospy.Rate(50)
+
+        # Publishers:
+        self.pub_ultrasonic_safety_status  = rospy.Publisher("ultrasonic_safety_status",
+                                                             SafetyStatusStamped, queue_size=5)
 
         # Variables:
-        self.is_running_ = False
-        self.turn_off_ultrasonic_safety_ = False
-        self.left_ultrasonic_range_ = 0.0
-        self.right_ultrasonic_range_ = 0.0
-        self.obstacle_state_ = SafetyStatus.NORMAL
-        self.prev_obstacle_state_ = SafetyStatus.NORMAL
-        self.safety_zone_type = SafetyZone.BIG_ZONE
-        
-        # Publishers:
-        self.pub_ultrasonic_safety_status  = rospy.Publisher("ultrasonic_safety_status", SafetyStatusStamped, queue_size=5)
+        self.is_run_once = False
+        self.is_turn_off_ultrasonic_safety = False
+        self.left_obstacle_state = 0
+        self.right_obstacle_state = 0
+        self.prev_obstacle_state = SafetyStatus.NORMAL
+        self.safety_zone_type = SafetyZone.BIG_ZONE            # [0: big zone, 1: small zone]
 
         # Subscribers:
-        rospy.Subscriber("left_ultrasonic/range", Range, self.left_ultrasonic_range_callback)
-        rospy.Subscriber("right_ultrasonic/range", Range, self.right_ultrasonic_range_callback)
-        rospy.Subscriber("safety_zone_type", SafetyZone, self.safety_zone_type_callback)
-        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
-        rospy.Subscriber("turn_off_ultrasonic_safety", Bool, self.turn_off_ultrasonic_safety_callback)
+        rospy.Subscriber("left_ultrasonic/range", Range, self.leftUltrasonicSensorCb)
+        rospy.Subscriber("right_ultrasonic/range", Range, self.rightUltrasonicSensorCb)
+        rospy.Subscriber("safety_zone_type", SafetyZone, self.safetyZoneTypeCb)
+        rospy.Subscriber("state_runonce_nav", Bool, self.runOnceStateCb)
+        rospy.Subscriber("turn_off_ultrasonic_safety", Bool, self.turnOffUltrasonicSafetyCb)
+
     
+    def turnOffUltrasonicSafetyCb(self, msg:Bool):
+        self.is_turn_off_ultrasonic_safety = msg.data
 
-    def turn_off_ultrasonic_safety_callback(self, msg:Bool):
-        self.turn_off_ultrasonic_safety_ = msg.data
 
-    def runonce_callback(self, msg:Bool):
-        self.is_running_ = msg.data
+    def runOnceStateCb(self, msg:Bool):
+        self.is_run_once = msg.data
 
-    def safety_zone_type_callback(self, msg:SafetyZone):
+
+    def safetyZoneTypeCb(self, msg: SafetyZone):
         self.safety_zone_type = msg.zone
+        msg_des = "big" if self.safety_zone_type == SafetyZone.BIG_ZONE else "small"
+        rospy.logwarn(f"Switched to ultrasonic {msg_des} safety zone")
 
-    def left_ultrasonic_range_callback(self, msg:Range):
-        self.left_ultrasonic_range_ = msg.range
 
-    def right_ultrasonic_range_callback(self, msg:Range):
-        self.right_ultrasonic_range_ = msg.range
+    def leftUltrasonicSensorCb(self, msg:Range):
+        self.left_obstacle_state = msg.range
+
+
+    def rightUltrasonicSensorCb(self, msg:Range):
+        self.right_obstacle_state = msg.range
+
 
     def run(self):
         while not rospy.is_shutdown():
-            if (not self.is_running_ or
-                self.turn_off_ultrasonic_safety_):
-                self.obstacle_state_ = SafetyStatus.NORMAL
-            else:
-                if self.safety_zone_type == SafetyZone.SMALL_ZONE:
-                    if (self.left_ultrasonic_range_ <= self.small_distance_ 
-                        or self.right_ultrasonic_range_ <= self.small_distance_):
-                        self.obstacle_state_ = SafetyStatus.PROTECTED
-
-                    elif (self.left_ultrasonic_range_ > self.small_distance_ 
-                          and self.right_ultrasonic_range_ > self.small_distance_):
-                        self.obstacle_state_ = SafetyStatus.NORMAL       
-                else:
-                    if (self.left_ultrasonic_range_ <= self.default_distance_
-                        or self.right_ultrasonic_range_ <= self.default_distance_):
-                        self.obstacle_state_ = SafetyStatus.PROTECTED
-
-                    elif (self.left_ultrasonic_range_ > self.default_distance_ 
-                          and self.right_ultrasonic_range_ > self.default_distance_):
-                        self.obstacle_state_ = SafetyStatus.NORMAL
-                
-                if self.obstacle_state_ != self.prev_obstacle_state_:
-                    if self.obstacle_state_ == SafetyStatus.PROTECTED:
-                        rospy.logwarn("UltrasonicSafety: Detect obstacle!")
+            if (not self.is_run_once or
+                self.is_turn_off_ultrasonic_safety):
+                pass
+            else:   
+                if (self.safety_zone_type == SafetyZone.SMALL_ZONE):
+                    if (self.left_obstacle_state <= self.small_distance 
+                        or self.right_obstacle_state <= self.small_distance):
+                        obstacle_state = SafetyStatus.PROTECTED
                     else:
-                        rospy.loginfo("UltrasonicSafety: No obstacle in range.")
-                    
-                    safety = SafetyStatusStamped()
-                    safety.header.frame_id = "ultrasonic_link"
-                    safety.header.stamp = rospy.Time.now()
-                    safety.safety_status.status = self.obstacle_state_
-                    self.pub_ultrasonic_safety_status.publish(safety)
+                        obstacle_state = SafetyStatus.NORMAL
+                elif (self.safety_zone_type == SafetyZone.BIG_ZONE):
+                    if (self.left_obstacle_state <= self.big_distance
+                        or self.right_obstacle_state <= self.big_distance):
+                        obstacle_state = SafetyStatus.PROTECTED
+                    else:
+                        obstacle_state = SafetyStatus.NORMAL
                 
-                self.prev_obstacle_state_ = self.obstacle_state_
-            
-            rospy.sleep(1/self.loop_freq_)    
+                if obstacle_state != self.prev_obstacle_state:
+                    safety = SafetyStatusStamped()
+                    safety.header.stamp = rospy.Time.now()
+                    safety.safety_status.status = obstacle_state
+                    self.pub_ultrasonic_safety_status.publish(safety)
+                    self.prev_obstacle_state = obstacle_state
+            self.rate.sleep()    
 
 
 if __name__== '__main__':
     rospy.init_node("ultrasonic_safety")
     try:
         ultrasonic_safety = UltrasonicSafety()
-        rospy.loginfo("UltrasonicSafety node is running!")
+        rospy.loginfo("%s node is running!", rospy.get_name())
         ultrasonic_safety.run()
 
     except rospy.ROSInterruptException:

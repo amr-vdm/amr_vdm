@@ -1,0 +1,7 @@
+scan_filter_chain:
+- name: front_scanner_filter
+  type: laser_filters/LaserScanPolygonFilter
+  params:
+    polygon_frame: front_camera_depth_frame
+    polygon: [[0.05, -0.25], [0.05, 0.25], [0.3, 0.25], [0.3, -0.25]]
+    invert: true

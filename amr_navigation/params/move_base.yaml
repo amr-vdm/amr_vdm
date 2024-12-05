@@ -5,10 +5,10 @@ footprint_padding: 0.05
 shutdown_costmaps: false
 ### replanning
 controller_frequency: 15.0   # run controller at 5.0 Hz
-controller_patience: 20.0    # if the controller failed, clear obstacles and retry; after 15.0 s, abort and replan
+controller_patience: 15.0    # if the controller failed, clear obstacles and retry; after 15.0 s, abort and replan
 planner_frequency: 0.5       # don't continually replan (only when controller failed)
-planner_patience: 20.0       # if the first planning attempt failed, abort planning retries after 5.0 s...
-max_planning_retries: 10     # ... or after 10 attempts (whichever happens first)
+planner_patience: 5.0        # if the first planning attempt failed, abort planning retries after 5.0 s...
+max_planning_retries: 3      # ... or after 10 attempts (whichever happens first)
 oscillation_timeout: 15.0    # abort controller and trigger recovery behaviors after 30.0 s
 
 ### recovery behaviors

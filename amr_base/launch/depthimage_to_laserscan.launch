@@ -2,20 +2,28 @@
 
     <arg name="front_camera_name" default="/front_camera"/>
     <arg name="depth_image" default="$(arg front_camera_name)/depth/image_rect_raw"/>
-    <arg name="scan" default="$(arg front_camera_name)/scan"/>
+    <arg name="scan" default="$(arg front_camera_name)/depth_scan"/>
     
     <node pkg="nodelet" type="nodelet" name="full_depthimage_to_laserscan"
           args="standalone full_depthimage_to_laserscan/DepthImageToLaserScanNodelet"  output="screen" required="true">
-      <param name="scan_height" value="500"/>
+      <param name="scan_height" value="30"/>
       <param name="scan_time" value="1/30"/>
       <param name="output_frame_id" value="front_camera_depth_frame"/>
-      <param name="range_min" value="0.3"/>
-      <param name="range_max" value="3.0"/>
+      <param name="range_min" value="0.05"/>
+      <param name="range_max" value="1.0"/>
       <remap from="image" to="$(arg depth_image)"/>
       <remap from="camera_info" to="$(arg front_camera_name)/camera_info"/>
       <remap from="scan" to="$(arg scan)"/>
       <param name="floor_dist" value=".1"/>
       <param name="overhead_dist" value=".5"/>
+    </node>
+
+    <node pkg="amr_driver" type="obstacle_detection_node" name="obstacle_detection" output="screen">
+        <remap from="obstacle_field" to="/front_camera/depth_scan/status"/>
+        <param name="min_range" value="0.2"/>
+        <param name="max_range" value="0.35"/>
+        <param name="noise_threshold" value="20"/>
+        <param name="laser_scan_topic" value="/front_camera/front_scan_filter"/>
     </node>
   
 </launch>

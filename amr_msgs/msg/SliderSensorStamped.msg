@@ -1,3 +1,0 @@
-Header header
-
-SliderSensor sensor_state

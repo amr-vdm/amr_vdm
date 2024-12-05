@@ -21,7 +21,7 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>urdf</build_depend>
   <build_depend>message_generation</build_depend>
-  <build_depend>microstrain-inertial-driver</build_depend>
+  <build_depend>microstrain_inertial_driver</build_depend>
   <build_depend>microstrain-inertial-rqt</build_depend>
 
   <build_export_depend>amr_msgs</build_export_depend>
@@ -35,7 +35,7 @@
   <build_export_depend>rosparam_shortcuts</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>urdf</build_export_depend>
-  <build_export_depend>microstrain-inertial-driver</build_export_depend>
+  <build_export_depend>microstrain_inertial_driver</build_export_depend>
   <build_export_depend>microstrain-inertial-rqt</build_export_depend>
 
   <exec_depend>amr_msgs</exec_depend>
@@ -50,7 +50,7 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>urdf</exec_depend>
   <exec_depend>message_runtime</exec_depend>
-  <exec_depend>microstrain-inertial-driver</exec_depend>
+  <exec_depend>microstrain_inertial_driver</exec_depend>
   <exec_depend>microstrain-inertial-rqt</exec_depend>
 
 

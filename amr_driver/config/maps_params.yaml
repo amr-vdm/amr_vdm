@@ -1,0 +1,32 @@
+floors:
+  - floor_id: 1
+    floor_name: L1  # TP2
+    map_name: map_tp2
+    path: /home/amr/catkin_ws/src/amr_vdm/amr_navigation/maps
+    pose_list:
+      ### Note: - Cach 1 mot cot moi den cot tiep theo!
+      ###       - Huong cua xe nam theo huong xe di cap hang str
+      - [9.383593, 54.866182, 0.700311, 0.713838]    # Trong phong tay rua (giong vi tri cu)
+      - [19.861406, 57.790397, 0.001156, 0.999999]   # Giua cua di vao phong tay rua
+      - [28.980145, 62.721961, 0.00846, 0.999964]    # Cot 1
+      - [46.703219, 62.791261, -0.042605, 0.999092]  # Cot 2
+      - [82.684373, 33.278458, 0.005916, 0.999983]   # Cot 3 (Cot nay nam ngang cot bat dau re vao cap hang line 56 (Gan line))
+      - [82.769211, 62.918494, -0.018708, 0.999825]  # Cot 4
+      - [93.167958, 55.410032, -0.707084, 0.70713]   # Cot 5 (Cot nay nam dau line 55)
+      - [92.847581, 46.410462, -0.706729, 0.707484]  # Cot 6 (Cot nay nam sat cho cap va lay hang tren line 55)
+
+  - floor_id: 2
+    floor_name: L2  # TP3
+    map_name: map_tp3
+    path: /home/amr/catkin_ws/src/amr_vdm/amr_navigation/maps
+    pose_list:
+      ### Note: - Cach 1 mot cot moi den cot tiep theo!
+      ###       - Huong cua xe nam theo huong xe di cap hang str
+      - [22.795299, 62.021626, 0.024546, 0.999699]    # Nam giua lane thang hang tram sac
+      - [37.99763, 61.97661, 0.006807, 0.999977]      # Cot 1 (Cach tram sac 1 cot moi den cot nay)
+      - [55.87616, 62.058161, 0.00392, 0.999992]      # Cot 2
+      - [57.11072, 61.9349, -0.019350475, 0.99981276] # Cot 3
+      - [91.654167, 62.394298, 0.007859, 0.999969]    # Cot 4
+      - [108.150788, 55.308405, -0.702546, 0.711639]  # Cot 5 (Cot nam gan cua dau tien di ra WC)
+      - [108.374893, 41.79512, -0.690809, 0.723038]   # Vi tri nam giua cua thu 2 di ra WC
+      - [107.676996, 32.697631, 0.99997, 0.007742]    # Vi tri nam giua diem vuong goc bat dau vao lane

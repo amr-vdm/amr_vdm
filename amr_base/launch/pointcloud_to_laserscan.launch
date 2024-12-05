@@ -8,7 +8,7 @@
     <node pkg="nodelet" type="nodelet" name="pointcloud_to_laserscan" args="standalone pointcloud_to_laserscan/pointcloud_to_laserscan_nodelet">
     <!-- <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan"> -->
         <remap from="cloud_in" to="$(arg camera)/depth/color/points"/>
-        <remap from="scan" to="$(arg camera)/scan"/>
+        <remap from="scan" to="$(arg camera)/pointcloud_scan"/>
         
         <param name="target_frame" value="front_camera_depth_frame"/>
         <param name="transform_tolerance" value="0.01"/>

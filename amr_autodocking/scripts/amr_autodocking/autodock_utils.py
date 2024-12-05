@@ -40,6 +40,7 @@ class DockState:
     ACTIVATE_CHARGER = AutoDockingFeedback.STATE_ACTIVATE_CHARGER
     SUCCESS = AutoDockingFeedback.STATE_SUCCESS
     RETRY = AutoDockingFeedback.STATE_RETRY
+    RETRY_HIGH_CURRENT = AutoDockingFeedback.STATE_RETRY_HIGH_CURRENT
     PAUSE = AutoDockingFeedback.STATE_PAUSE
     CANCEL = AutoDockingFeedback.STATE_CANCEL
 
@@ -57,6 +58,7 @@ class DockState:
             DockState.ACTIVATE_CHARGER: 'ACTIVATE_CHARGER',
             DockState.SUCCESS: 'SUCCESS',
             DockState.RETRY: 'RETRY',
+            DockState.RETRY_HIGH_CURRENT: 'RETRY_HIGH_CURRENT',
             DockState.PAUSE: 'PAUSE',
             DockState.CANCEL: 'CANCEL'
         }
@@ -80,11 +82,50 @@ class DockState:
             DockState.GO_OUT_DOCK: 1.0,
             DockState.SUCCESS: 1.0,
             DockState.RETRY: 0.1,
+            DockState.RETRY_HIGH_CURRENT: 0.5,
             DockState.PAUSE: 0.1,
             DockState.CANCEL: 0.0  # TODO
         }
         return _map[input]
 
+class PID:
+    def __init__(self, kp, ki, kd, out_min: float = 0.0, out_max: float = 0.0):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.prev_error = 0
+        self.integral = 0
+        self.out_min = out_min
+        self.out_max = out_max
+
+    def update(self, setpoint, feedback_value, dt):
+        dt_ms = dt*1000
+        error = setpoint - feedback_value
+        self.integral += error * dt_ms
+        derivative = (error - self.prev_error) / dt_ms
+        output = self.kp * error + self.ki * self.integral + self.kd * derivative
+        self.prev_error = error
+        # print('setpoint: ', setpoint)
+        # print('feedback_value: ', feedback_value)
+        # print('output: ', output)
+        if (self.out_min != 0 or self.out_max != 0):
+            return self.clamp(abs(output), self.out_min, self.out_max)
+        return output
+
+    def set_setpoint(self, setpoint):
+        self.setpoint = setpoint
+
+    def set_tunings(self, kp, ki, kd):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+
+    def clamp(self, value, lower_limit, upper_limit):
+        if value > upper_limit:
+            return upper_limit
+        elif value < lower_limit:
+            return lower_limit
+        return value
 
 def get_mat_from_transfrom_msg(msg: TransformStamped) -> np.ndarray:
     """
@@ -204,6 +245,19 @@ def sat_proportional_filter(input: float, abs_min=0.0, abs_max=10.0, factor=1.0)
     return output
 
 
+def limit_angular_velocity(input:float,
+                           angular_velocity:float,
+                           min_angular,
+                           max_angular) -> float:
+
+    if angular_velocity > max_angular:
+        angular_velocity = max_angular
+    elif angular_velocity < min_angular:
+        angular_velocity = min_angular
+    
+    return (angular_velocity if input > 0 else -angular_velocity)
+
+
 def bin_filter(input: float, abs_boundary: float) -> float:
     """
     Simple binary filter, will provide abs_ceiling as a binary output,
@@ -244,10 +298,3 @@ def flip_base_frame(input: Pose2D):
     quadrant. Currently is used to flip from 'back dock' to 'front dock'
     """
     return -input[0], -input[1], flip_yaw(input[2])
-
-
-def clamp(value, low, high):
-    """
-    Clamps a value within a specified range.
-    """
-    return max(low, min(value, high))

@@ -12,6 +12,9 @@ add_message_files(
   FILES
     AngularVelocities.msg
     AngularVelocitiesStamped.msg
+    DockLimit.msg
+    DockMode.msg
+    DockParam.msg
     Encoders.msg
     EncodersStamped.msg
     Error.msg
@@ -21,12 +24,17 @@ add_message_files(
     WheelsCmdStamped.msg
     PID.msg
     PIDStamped.msg
-    SliderSensor.msg
-    SliderSensorStamped.msg
-    StartState.msg
+    PoseInitial.msg
+    CheckerSensorState.msg
+    CheckerSensorStateStamped.msg
     SafetyStatus.msg
     SafetyStatusStamped.msg
     SafetyZone.msg
+)
+
+add_service_files(
+  FILES
+  ChangeFloor.srv
 )
 
 ## Generate added messages and services with any dependencies listed here

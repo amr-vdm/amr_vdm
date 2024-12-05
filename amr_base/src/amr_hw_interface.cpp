@@ -74,15 +74,15 @@ namespace amr_base
         // ros_control RobotHW needs velocity in rad/s but in the config its given in m/s
         max_velocity_ = linearToAngular(max_velocity_);
 
-        ROS_INFO_STREAM("AmrHWInterface: mobile_base_controller/wheel_radius: " << wheel_radius_);
-        ROS_INFO_STREAM("AmrHWInterface: mobile_base_controller/linear/x/max_velocity: " << max_velocity_);
-        ROS_INFO_STREAM("AmrHWInterface: MR_encoder_resolution: " << MR_encoder_resolution_);
-        ROS_INFO_STREAM("AmrHWInterface: MS_encoder_resolution: " << MS_encoder_resolution_);
-        ROS_INFO_STREAM("AmrHWInterface: gain: " << gain_);
-        ROS_INFO_STREAM("AmrHWInterface: trim: " << trim_);
-        ROS_INFO_STREAM("AmrHWInterface: motor_constant: " << motor_constant_);
-        ROS_INFO_STREAM("AmrHWInterface: PLC's IP Address: " << ip_address);
-        ROS_INFO_STREAM("AmrHWInterface: PLC's IP Port: " << ip_port);
+        ROS_INFO_STREAM("mobile_base_controller/wheel_radius: " << wheel_radius_);
+        ROS_INFO_STREAM("mobile_base_controller/linear/x/max_velocity: " << max_velocity_);
+        ROS_INFO_STREAM("MR_encoder_resolution: " << MR_encoder_resolution_);
+        ROS_INFO_STREAM("MS_encoder_resolution: " << MS_encoder_resolution_);
+        ROS_INFO_STREAM("gain: " << gain_);
+        ROS_INFO_STREAM("trim: " << trim_);
+        ROS_INFO_STREAM("motor_constant: " << motor_constant_);
+        ROS_INFO_STREAM("PLC's IP Address: " << ip_address);
+        ROS_INFO_STREAM("PLC's IP Port: " << ip_port);
 
         //Setup publisher for angular wheel joint velocity commands
         pub_wheel_cmd_velocities_ = nh_.advertise<amr_msgs::WheelsCmdStamped>("wheel_cmd_velocities", 10);
@@ -130,12 +130,12 @@ namespace amr_base
  
     bool AmrHWInterface::init(ros::NodeHandle &root_nh, ros::NodeHandle &robot_hw_nh)
     {
-        ROS_INFO("AmrHWInterface: Initializing AMR Hardware Interface ...");
+        ROS_INFO("Initializing AMR Hardware Interface ...");
         num_joints_ = joint_names_.size();
-        ROS_INFO("AmrHWInterface: Number of joints: %d", (int)num_joints_);
+        ROS_INFO("Number of joints: %d", (int)num_joints_);
         std::array<std::string, NUM_JOINTS> motor_names = {"left_motor", "right_motor", "slider_motor"};
 
-        // ROS_INFO("AmrHWInterface: REGISTERING... %s", operating_mode);
+        // ROS_INFO("REGISTERING... %s", operating_mode);
 
         for (unsigned int i = 0; i < num_joints_; i++)
         {
@@ -180,7 +180,7 @@ namespace amr_base
 
             // Initialize the pid controllers for the motors using the robot namespace
             std::string pid_namespace = "pid/" + motor_names[i];
-            ROS_INFO_STREAM("AmrHWInterface: pid namespace: " << pid_namespace);
+            ROS_INFO_STREAM("pid namespace: " << pid_namespace);
             ros::NodeHandle nh(root_nh, pid_namespace);
             // TODO implement builder pattern to initialize values otherwise it is hard to see which parameter is what.
             pids_[i].init(nh, 0.8, 0.045, 0.0, 0.0001, 3.5, -3.5, false, slider_motor_spd, -slider_motor_spd);
@@ -215,7 +215,7 @@ namespace amr_base
         current_break_bytes[0] = bytes[0];
         current_break_bytes[1] = bytes[1];
 
-        ROS_INFO("AmrHWInterface: Initialized.");
+        ROS_WARN("... Initialize AMR Hardware Interface successfully!");
 
         return true;
     }
@@ -233,7 +233,7 @@ namespace amr_base
         register_data = sktcpclient_fx3u_.read_word_FX3U('D', (uint32_t)reg_data_motor[0], reg_data_motor_length * num_joints_);
 
         if (register_data[23] == 11){
-            ROS_ERROR("AmrHWInterface: Get data registers for position and velocity: ERROR");
+            ROS_ERROR("Get data registers for position and velocity: ERROR");
         } else {
             
             for (std::size_t i = 0; i < num_joints_; ++i)
@@ -249,17 +249,17 @@ namespace amr_base
                     speeds[i] = (*((int16_t*) speed_register));
                     encoder_ticks_[i] = *((int32_t*) encoder_register);
                 }
-                // ROS_WARN("AmrHWInterface: SPEED: %d", speeds[i]);
-                // ROS_WARN("AmrHWInterface: ENCODER TICK[%d]: %d", i, encoder_ticks_[i]);
+                // ROS_WARN("SPEED: %d", speeds[i]);
+                // ROS_WARN("ENCODER TICK[%d]: %d", i, encoder_ticks_[i]);
 
                 if (operating_mode[i] == MOTOR_MODE.WHEEL ) {
                     joint_positions_[i] += sktcpclient_fx3u_.convertValue2Radian(encoder_ticks_prev[i], encoder_ticks_[i], MR_encoder_resolution_ , gear_ratio_);
                     joint_velocities_[i] = sktcpclient_fx3u_.convertValue2Velocity(speeds[i], gear_ratio_);
                 } else if (operating_mode[i] == MOTOR_MODE.SLIDER) {
-                    joint_positions_[i] = sktcpclient_fx3u_.convertPulse2Meter(encoder_ticks_[i], MS_encoder_resolution_ , gear_ratio_ * gear_ratio_pinion, pinion_gear_radius, rack_pinion_gear_efficiency);
+                    joint_positions_[i] = sktcpclient_fx3u_.convertPulse2Meter(encoder_ticks_[i], MR_encoder_resolution_ , gear_ratio_ * gear_ratio_pinion, pinion_gear_radius, rack_pinion_gear_efficiency);
                     joint_velocities_[i] = sktcpclient_fx3u_.convertValue2Velocity(speeds[i], gear_ratio_ * gear_ratio_pinion) * pinion_gear_radius;
                 } else {
-                    ROS_ERROR("AmrHWInterface: Operating mode is Unknown, please check!");
+                    ROS_ERROR("Operating mode is Unknown, please check!");
                     return;
                 }
 
@@ -267,8 +267,8 @@ namespace amr_base
 
                 encoder_ticks_prev[i] = encoder_ticks_[i];
             }
-            // ROS_WARN("AmrHWInterface: DELTA TICKS: %d", encoder_ticks_[0] - encoder_ticks_[1]);
-            // ROS_WARN("AmrHWInterface: Delta joint position: %f", joint_positions_[0] - joint_positions_[1]);
+            // ROS_WARN("DELTA TICKS: %d", encoder_ticks_[0] - encoder_ticks_[1]);
+            // ROS_WARN("Delta joint position: %f", joint_positions_[0] - joint_positions_[1]);
 
         }
         pub_encoder_ticks(encoder_ticks_);
@@ -328,7 +328,7 @@ namespace amr_base
                 motor_speed[i] = floor(pids_[i](encoder_ticks_[i],sktcpclient_fx3u_.convertMeter2Pulse(joint_commands_[i],MR_encoder_resolution_,
                 gear_ratio_*gear_ratio_pinion,pinion_gear_radius), period));
             } else {
-                ROS_ERROR("AmrHWInterface: Operating mode is Unknown, please check!");
+                ROS_ERROR("Operating mode is Unknown, please check!");
                 return;
             }
 
@@ -345,7 +345,7 @@ namespace amr_base
                 bit_breaker[i] = 0;                    
                 // if (!breaker_state[i] && (i != 2)) {
                 if (!breaker_state[i]) {
-                    // ROS_WARN("AmrHWInterface: BREAKER: ON");
+                    // ROS_WARN("BREAKER: ON");
                     // sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],0);
                     breaker_state[i] = true;
                 }
@@ -360,7 +360,7 @@ namespace amr_base
                 data_transmit[7 + i*8] = current_break_bytes[1];
                 bit_breaker[i] = 1;
                 if (breaker_state[i]) {
-                    // ROS_WARN("AmrHWInterface: BREAKER: OFF");
+                    // ROS_WARN("BREAKER: OFF");
                     sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],1);
                     breaker_state[i] = false;
                 }  
@@ -378,7 +378,7 @@ namespace amr_base
                 bit_breaker[i] = 1;
                 // if (breaker_state[i] && (i != 2)) {
                 if (breaker_state[i]) {
-                    // ROS_WARN("AmrHWInterface: BREAKER: OFF");
+                    // ROS_WARN("BREAKER: OFF");
                     sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],1);
                     breaker_state[i] = false;
                 }
@@ -387,13 +387,13 @@ namespace amr_base
         }
 
         // for (int i=0; i< reg_spd_cmd_length * 2 * num_joints_; i++) {
-        //     ROS_WARN("AmrHWInterface: data_transmit[%d]: %d", i, data_transmit[i]);
+        //     ROS_WARN("data_transmit[%d]: %d", i, data_transmit[i]);
         // }
 
-        // ROS_WARN("AmrHWInterface: MOTOR SPEED[%d]: %d",2,motor_speed[2]);
-        // ROS_WARN("AmrHWInterface: ENCODER target: %d", sktcpclient_fx3u_.convertMeter2Pulse(joint_commands_[2],MR_encoder_resolution_,
+        // ROS_WARN("MOTOR SPEED[%d]: %d",2,motor_speed[2]);
+        // ROS_WARN("ENCODER target: %d", sktcpclient_fx3u_.convertMeter2Pulse(joint_commands_[2],MR_encoder_resolution_,
         //         gear_ratio_*gear_ratio_pinion,pinion_gear_radius));
-        // ROS_WARN("AmrHWInterface: ENCODER response: %d", encoder_ticks_prev[2]);
+        // ROS_WARN("ENCODER response: %d", encoder_ticks_prev[2]);
 
         // _pub_encoder_target(sktcpclient_fx3u_.convertMeter2Pulse(joint_commands_[2],MR_encoder_resolution_,
         //         gear_ratio_*gear_ratio_pinion,pinion_gear_radius));
@@ -409,21 +409,21 @@ namespace amr_base
 
     bool AmrHWInterface::isSocketPcAndPlcOK(const ros::Duration &timeout)
     {
-        ROS_INFO("AmrHWInterface: Intialize socket connect between PC and PLC!");
+        ROS_INFO("Intialize socket connect between PC and PLC!");
         ros::Time start = ros::Time::now();
         bool isConected = false;
         while ((!isConected) &&  (ros::Time::now() < start + timeout))
         {
-            ROS_INFO("AmrHWInterface: Waiting for socket (PC and PLC) connected...");
+            ROS_INFO("Waiting for socket (PC and PLC) connected...");
             isConected = sktcpclient_fx3u_.setup(ip_address, ip_port);
 
             ros::Duration(0.1).sleep();
         }
         if (isConected){
-            ROS_INFO("AmrHWInterface: PC connected to PLC successfully!");
+            ROS_WARN("PC connected to PLC successfully!");
             return true;
         } else {
-            ROS_ERROR("AmrHWInterface: PC can not connect to PLC (some error)!");
+            ROS_ERROR("PC can not connect to PLC (some error)!");
             return false;
         }
     }
@@ -557,7 +557,7 @@ namespace amr_base
 
     bool AmrHWInterface::set_origin_slider_motor(const ros::Duration &timeout)
     {
-        ROS_INFO("AmrHWInterface: Checking original state of slider motor!");
+        ROS_INFO("Checking original state of slider motor!");
         ros::Time start = ros::Time::now();
 
         bool isOriginOK = sktcpclient_fx3u_.read_bit_FX3U('M',(uint32_t)bit_slider_origin[1]);
@@ -568,32 +568,32 @@ namespace amr_base
 
         while (!isOriginOK &&  (ros::Time::now() < start + timeout))
         {
-            ROS_WARN("AmrHWInterface: Setting slider motor to original postion...");
+            ROS_WARN("Setting slider motor to original postion...");
             isOriginOK = sktcpclient_fx3u_.read_bit_FX3U('M',(uint32_t)bit_slider_origin[1]);
             ros::Duration(0.5).sleep();
         }
 
-        // ROS_WARN("AmrHWInterface: IS_ORIGRIN = %d", isOriginOK);
+        // ROS_WARN("IS_ORIGRIN = %d", isOriginOK);
 
         if (isOriginOK){
-            ROS_INFO("AmrHWInterface: Set slider motor's original position successfully!");
+            ROS_INFO("Set slider motor's original position successfully!");
             return true;
         } else {
-            ROS_ERROR("AmrHWInterface: CAN NOT SET THE SLIDER MOTOR TO ORIGINAL POSITION!");
+            ROS_ERROR("CAN NOT SET THE SLIDER MOTOR TO ORIGINAL POSITION!");
             return false;
         }
     }
 
     bool AmrHWInterface::reset_motor()
     {
-        ROS_INFO("AmrHWInterface: Reseting all motor...");
+        ROS_INFO("Reseting all motor...");
         uint8_t bits[num_joints_];
         for ( int i=0; i<num_joints_; ++i) {
             bits[i] = 1;
         }
         sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_reset_motor[0],num_joints_,bits);
         // sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[0],num_joints_,bits);
-        ROS_INFO("AmrHWInterface: Reset all motor successfully!");
+        ROS_INFO("Reset all motor successfully!");
 
         return true;
     }

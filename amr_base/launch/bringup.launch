@@ -1,24 +1,19 @@
 <launch>
-    <arg name="namespace"                 default="amr"/>
-    <arg name="model_name"                default="amr"/>
-    <arg name="planner_name"              default="thetas"/>
-    <arg name="controller_name"           default="rs"/>
-    <arg name="back_laser_frame_id"       default="back_laser_link"/>
-    <arg name="front_laser_frame_id"      default="front_laser_link"/>
-    <arg name="angle_start_front"         default="-1.745329252"/>
-    <arg name="angle_end_front"           default="1.745329252"/>
-    <arg name="angle_start_back"          default="-1.832595715"/>
-    <arg name="angle_end_back"            default="1.832595715"/>
-    <arg name="map_file"                  default="$(find amr_gazebo)/maps/map_tp2/edited/map.yaml"/>
-    <arg name="virtual_wall_file"         default="$(find amr_gazebo)/maps/map_tp2/virtual_walls/map.yaml"/>
-    <arg name="speed_filter_map_path"     default="$(find amr_gazebo)/maps/map_tp2/speed_filter/map.yaml"/>
-    <arg name="disable_obstacle_map_path" default="$(find amr_gazebo)/maps/map_tp2/disable_obstacle/map.yaml"/>
-    <arg name="safety_filter_map_path"    default="$(find amr_gazebo)/maps/map_tp2/safety_zone/map.yaml"/>
-    <!-- <arg name="map_file"                  default="$(find amr_gazebo)/maps/map_tp3/edited/map.yaml"/>
-    <arg name="virtual_wall_file"         default="$(find amr_gazebo)/maps/map_tp3/virtual_walls/map.yaml"/>
-    <arg name="speed_filter_map_path"     default="$(find amr_gazebo)/maps/map_tp3/safety_filter/map.yaml"/>
-    <arg name="disable_obstacle_map_path" default="$(find amr_gazebo)/maps/map_tp3/disable_obstacle/map.yaml"/> -->
-    <arg name="open_rviz"                 default="false"/>
+    <arg name="namespace"                default="amr"/>
+    <arg name="model_name"               default="amr"/>
+    <arg name="planner_name"             default="thetas"/>
+    <arg name="controller_name"          default="rs"/>
+    <arg name="back_laser_frame_id"      default="back_laser_link"/>
+    <arg name="front_laser_frame_id"     default="front_laser_link"/>
+    <arg name="angle_start_front"        default="-1.745329252"/>
+    <arg name="angle_end_front"          default="1.745329252"/>
+    <arg name="angle_start_back"         default="-1.77"/>
+    <arg name="angle_end_back"           default="1.77"/>
+    <arg name="map_file"                 default="$(find amr_navigation)/maps/map_tp2/edited/map.yaml"/>
+    <arg name="virtual_wall_file"        default="$(find amr_navigation)/maps/map_tp2/virtual_walls/map.yaml"/>
+    <arg name="obstacle_filter_map_path" default="$(find amr_navigation)/maps/map_tp2/disable_obstacle/map.yaml"/>
+    <arg name="safety_filter_map_path"   default="$(find amr_navigation)/maps/map_tp2/safety_filter/map.yaml"/>
+    <arg name="open_rviz"                default="false"/>
 
     <!-- Load URDF -->
     <param name="amr/robot_description" command="$(find xacro)/xacro --inorder $(find amr_description)/urdf/amr.urdf.xacro"/>
@@ -87,23 +82,25 @@
 
     <!-- Launch navigation stack -->
     <include file="$(find amr_navigation)/launch/start_planner.launch">
-        <arg name="open_rviz"                  value="$(arg open_rviz)"/>
-        <arg name="planner_name"               value="$(arg planner_name)"/>
-        <arg name="controller_name"            value="$(arg controller_name)"/>
-        <arg name="map_file"                   value="$(arg map_file)"/>
-        <arg name="virtual_wall_file"          value="$(arg virtual_wall_file)"/>
-        <arg name="speed_filter_map_path"      value="$(arg speed_filter_map_path)" />
-        <arg name="disable_obstacle_map_path"  value="$(arg disable_obstacle_map_path)" />
-        <arg name="safety_filter_map_path"     value="$(arg safety_filter_map_path)" />
+        <arg name="open_rviz"                value="$(arg open_rviz)"/>
+        <arg name="planner_name"             value="$(arg planner_name)"/>
+        <arg name="controller_name"          value="$(arg controller_name)"/>
+        <arg name="map_file"                 value="$(arg map_file)"/>
+        <arg name="virtual_wall_file"        value="$(arg virtual_wall_file)"/>
+        <arg name="obstacle_filter_map_path" value="$(arg obstacle_filter_map_path)"/>
+        <arg name="safety_filter_map_path"   value="$(arg safety_filter_map_path)"/>
     </include>
 
     <!-- Launch FLEET CLIENT -->
-    <!-- <include file="$(find amr_base)/launch/fleet_client.launch"/> -->
+    <include file="$(find amr_base)/launch/fleet_client.launch"/>
 
     <!--=== Launch all nodes ===-->
     <include file="$(find amr_base)/launch/other_nodes.launch"/>
 
     <!--===> LAUNCH depthImagetoLaserScan <===-->
-    <!-- <include file="$(find amr_base)/launch/depthimage_to_laserscan.launch"/> -->
+    <include file="$(find amr_base)/launch/depthimage_to_laserscan.launch"/>
+
+    <!--pointcloud to laserscan-->
+    <!-- <include file="$(find amr_base)/launch/pointcloud_to_laserscan.launch"/> -->
 
 </launch>

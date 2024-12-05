@@ -1,18 +1,25 @@
 <launch>
-  <arg name="launch_prefix" default="" />
-
-  <arg name="back_camera_name" default="/back_camera" />
+  <arg name="launch_prefix"     default="" />
+  <arg name="back_camera_name"  default="/back_camera" />
   <arg name="front_camera_name" default="/front_camera" />
-  <arg name="image_topic" default="image_rect" />
-  <arg name="queue_size" default="1" />
+  <arg name="image_topic"       default="image_rect" />
+  <arg name="queue_size"        default="1" />
 
-  <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros" clear_params="true" output="screen" ns="back_camera">
-    <remap from="image_rect" to="$(arg back_camera_name)/$(arg image_topic)" />
-    <remap from="$(arg back_camera_name)/camera_info" to="$(arg back_camera_name)/color/camera_info" />
-
+  <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros"
+        clear_params="true" output="screen" ns="back_camera">
+    <rosparam command="load" file="$(find amr_autodocking)/config/back_apriltag_detector.yaml"/>
+    <remap from="image_rect"                          to="$(arg back_camera_name)/$(arg image_topic)"/>
+    <remap from="$(arg back_camera_name)/camera_info" to="$(arg back_camera_name)/color/camera_info"/>
     <param name="publish_tag_detections_image" type="bool" value="false" />
-    <param name="queue_size" type="int" value="$(arg queue_size)" />
+    <param name="queue_size"                   type="int" value="$(arg queue_size)" />
+  </node>
 
-    <rosparam command="load" file="$(find amr_autodocking)/config/apriltag_detection_param.yaml"/>
+  <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros"
+        clear_params="true" output="screen" ns="front_camera">
+    <rosparam command="load" file="$(find amr_autodocking)/config/front_apriltag_detector.yaml"/>
+    <remap from="image_rect"                           to="$(arg front_camera_name)/$(arg image_topic)"/>
+    <remap from="$(arg front_camera_name)/camera_info" to="$(arg front_camera_name)/color/camera_info"/>
+    <param name="publish_tag_detections_image" type="bool" value="false" />
+    <param name="queue_size"                   type="int" value="$(arg queue_size)" />
   </node>
 </launch>

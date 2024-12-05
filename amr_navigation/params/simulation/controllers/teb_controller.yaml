@@ -6,30 +6,13 @@ TebLocalPlannerROS:
   odom_topic: /odometry/filtered
   map_frame: map
 
-  # Rotate to goal
-  use_rotate_to_goal: true
-  angle_threshold: 30 # in degrees [Used to rotate the robot more smoothly]
-  angular_vel_to_heading: 0.3
-  frequency: 20.0
-  max_acc_theta: 1.5
-  min_angular_vel: 0.1  # [Used to rotate the robot more smoothly]
-  min_global_plan_complete_size: 20
-  goal_dist_tol: 0.3
-  checking_pose_distance: 1.5   # Check distance before switching pose
-  angle_for_check_goal: 30 # in degrees [Check if the final direction of the goal and 
-                           # the current direction of the robot are greater than the 
-                           # value of "angle_for_check_goal." If so, override the robot's
-                           # current direction with the final direction of the goal
-                           # (to prevent TEB from creating an "elastic" trajectory).]
-  angle_tolerance_to_goal: 0.02 # Change 0.02 - 0.05
-
   # Trajectory
   teb_autosize: true                       
   dt_ref: 0.3                              
   dt_hysteresis: 0.1                       
   global_plan_overwrite_orientation: true
   allow_init_with_backwards_motion: true  
-  max_global_plan_lookahead_dist: 3.5 #3.0 
+  max_global_plan_lookahead_dist: 1.5 #3.0 
   force_reinit_new_goal_dist: 1.0
   # force_reinit_new_goal_angular:           
   feasibility_check_no_poses: 5 
@@ -37,7 +20,7 @@ TebLocalPlannerROS:
   exact_arc_length: false                  
   publish_feedback: false
   # control_look_ahead_poses:   
-  # prevent_look_ahead_poses_near_goal:
+  prevent_look_ahead_poses_near_goal: 50
   visualize_with_time_as_z_axis_scale: 0.0              
   
   # Via point
@@ -45,17 +28,17 @@ TebLocalPlannerROS:
   via_points_ordered: false                
 
   # Robot
-  max_vel_x: 0.5
-  max_vel_x_backwards: 0.2                
+  max_vel_x: 0.75
+  max_vel_x_backwards: 0.25                
   max_vel_theta: 0.6                       
-  acc_lim_x: 0.15 #2.0                          
-  acc_lim_theta: 0.12 #1.0                      
+  acc_lim_x: 0.101 #2.0                          
+  acc_lim_theta: 0.101 #1.0                      
   is_footprint_dynamic: true
   # use_proportional_saturation:
   # transform_tolerance:              
   footprint_model:
     type: "polygon"
-    vertices: [[0.22,0.22],[-0.92,0.22],[-0.92,-0.22],[0.22,-0.22]]
+    vertices: [[0.22,0.22],[-0.6,0.22],[-0.6,-0.22],[0.22,-0.22]]
 
   # Robot / Carlike
   min_turning_radius: 0.0 # 0.1                  
@@ -68,8 +51,8 @@ TebLocalPlannerROS:
   acc_lim_y: 0.0                           
 
   # Goal tolerance
-  xy_goal_tolerance: 0.08                  
-  yaw_goal_tolerance: 0.06                 
+  xy_goal_tolerance: 0.05                  
+  yaw_goal_tolerance: 0.05                 
   free_goal_vel: false      # Allow the robot's velocity to be nonzero for planning purposes 
                             # (the robot can arrive at the goal with max speed)                  
   # trans_stopped_vel: 0.0
@@ -101,11 +84,11 @@ TebLocalPlannerROS:
   weight_max_vel_x: 1.0    
   weight_max_vel_y: 1.0
   weight_max_vel_theta: 1.0         
-  weight_acc_lim_x: 1.0 #1.0
+  weight_acc_lim_x: 10.0 #1.0
   weight_acc_lim_y: 1.0     
-  weight_acc_lim_theta: 1.0 #1.0  
-  weight_kinematics_nh: 1000.0   # 10000.0  
-  weight_kinematics_forward_drive: 1.0
+  weight_acc_lim_theta: 10.0 #1.0  
+  weight_kinematics_nh: 3000.0   # 10000.0  
+  weight_kinematics_forward_drive: 1000.0
   weight_kinematics_turning_radius: 1.0
   weight_optimaltime: 10.0
   weight_shortest_path: 0.0   # Optimization weight for contracting the trajectory w.r.t. path length 

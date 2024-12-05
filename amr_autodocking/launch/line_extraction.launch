@@ -1,11 +1,11 @@
 <launch>
-  <node name="back_line_extractor" pkg="laser_line_extraction" type="line_extraction_node">
-    <rosparam file="$(find amr_autodocking)/config/back_line_extraction_params.yaml" command="load"/>
-    <remap from="/line_markers" to="/back_line_markers"/>
-    <remap from="/line_segments" to="/back_line_segments"/>
-  </node>
+    <node name="back_line_extractor" pkg="laser_line_extraction" type="line_extraction_node">
+      <rosparam file="$(find amr_autodocking)/config/back_line_extraction_params.yaml" command="load"/>
+      <remap from="/line_markers"  to="/back_line_markers"/>
+      <remap from="/line_segments" to="/back_line_segments"/>
+    </node>
 
-  <node name="front_line_extractor" pkg="laser_line_extraction" type="line_extraction_node">
+    <node name="front_line_extractor" pkg="laser_line_extraction" type="line_extraction_node">
       <rosparam file="$(find amr_autodocking)/config/front_line_extraction_params.yaml" command="load"/>
       <remap from="/line_markers"  to="/front_line_markers"/>
       <remap from="/line_segments" to="/front_line_segments"/>

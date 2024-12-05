@@ -11,8 +11,8 @@ TebLocalPlannerROS:
   dt_ref: 0.3                              
   dt_hysteresis: 0.1                       
   global_plan_overwrite_orientation: true
-  allow_init_with_backwards_motion: false  
-  max_global_plan_lookahead_dist: 2.5      
+  allow_init_with_backwards_motion: true  
+  max_global_plan_lookahead_dist: 1.5 #3.0 
   force_reinit_new_goal_dist: 1.0
   # force_reinit_new_goal_angular:           
   feasibility_check_no_poses: 5 
@@ -20,38 +20,38 @@ TebLocalPlannerROS:
   exact_arc_length: false                  
   publish_feedback: false
   # control_look_ahead_poses:   
-  # prevent_look_ahead_poses_near_goal:
+  prevent_look_ahead_poses_near_goal: 50
   visualize_with_time_as_z_axis_scale: 0.0              
   
   # Via point
-  global_plan_viapoint_sep: 2.0           
+  global_plan_viapoint_sep: 0.5           
   via_points_ordered: false                
 
   # Robot
-  max_vel_x: 0.7
-  max_vel_x_backwards: 0.25                 
+  max_vel_x: 0.75
+  max_vel_x_backwards: 0.25                
   max_vel_theta: 0.6                       
-  acc_lim_x: 2.0                          
-  acc_lim_theta: 1.0                      
+  acc_lim_x: 0.101 #2.0                          
+  acc_lim_theta: 0.101 #1.0                      
   is_footprint_dynamic: true
   # use_proportional_saturation:
   # transform_tolerance:              
   footprint_model:
     type: "polygon"
-    vertices: [[0.25,0.22],[-0.6,0.22],[-0.6,-0.22],[0.25,-0.22]]
+    vertices: [[0.22,0.22],[-0.6,0.22],[-0.6,-0.22],[0.22,-0.22]]
 
   # Robot / Carlike
   min_turning_radius: 0.0 # 0.1                  
   wheelbase: 0.0 # 1.033809                           
-  cmd_angle_instead_rotvel: false   # Using carlike model if this param set true
+  cmd_angle_instead_rotvel: false
 
   # Robot / Omni
   max_vel_y: 0.0
-  max_vel_trans: 0.0                           
+  max_vel_trans: 0.0                         
   acc_lim_y: 0.0                           
 
   # Goal tolerance
-  xy_goal_tolerance: 0.1                  
+  xy_goal_tolerance: 0.05                  
   yaw_goal_tolerance: 0.05                 
   free_goal_vel: false      # Allow the robot's velocity to be nonzero for planning purposes 
                             # (the robot can arrive at the goal with max speed)                  
@@ -59,11 +59,11 @@ TebLocalPlannerROS:
   # theta_stopped_vel: 0.0
 
   # Obstacles
-  min_obstacle_dist: 0.45 # Minimum desired separation from obstacles
-  inflation_dist: 0.55 # Buffer zone around obstacles with non-zero penalty costs 
-                       # (should be larger than min_obstacle_dist in order to take effect)
-  dynamic_obstacle_inflation_dist: 0.55  # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
-                                         # (should be larger than min_obstacle_dist in order to take effect)     
+  min_obstacle_dist: 0.015 # 0.481 Minimum desired separation from obstacles
+  inflation_dist: 0.02 # Buffer zone around obstacles with non-zero penalty costs 
+                      # (should be larger than min_obstacle_dist in order to take effect)
+  dynamic_obstacle_inflation_dist: 0.5  # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
+                                        # (should be larger than min_obstacle_dist in order to take effect)     
   include_dynamic_obstacles: true         
   include_costmap_obstacles: true          
   legacy_obstacle_association: false       
@@ -84,20 +84,20 @@ TebLocalPlannerROS:
   weight_max_vel_x: 1.0    
   weight_max_vel_y: 1.0
   weight_max_vel_theta: 1.0         
-  weight_acc_lim_x: 1.0
+  weight_acc_lim_x: 10.0 #1.0
   weight_acc_lim_y: 1.0     
-  weight_acc_lim_theta: 1.0  
-  weight_kinematics_nh: 5000.0   # 10000.0  
-  weight_kinematics_forward_drive: 1.0
+  weight_acc_lim_theta: 10.0 #1.0  
+  weight_kinematics_nh: 3000.0   # 10000.0  
+  weight_kinematics_forward_drive: 1000.0
   weight_kinematics_turning_radius: 1.0
   weight_optimaltime: 10.0
   weight_shortest_path: 0.0   # Optimization weight for contracting the trajectory w.r.t. path length 
-  weight_obstacle: 1.0    # 50.0
+  weight_obstacle: 50.0
   weight_inflation: 0.2   # 1.0           
   weight_dynamic_obstacle: 1.0           
   weight_dynamic_obstacle_inflation: 0.2
   weight_velocity_obstacle_ratio: 0.0
-  weight_viapoint: 100.0                
+  weight_viapoint: 1.0 #100.0                
   weight_adapt_factor: 2.0
   obstacle_cost_exponent: 1.0   # Exponent for nonlinear obstacle cost (cost = linear_cost * obstacle_cost_exponent). Set to 1 to disable nonlinear cost (default)                
 
@@ -124,4 +124,5 @@ TebLocalPlannerROS:
 
   # Recovery
   shrink_horizon_backup: true           
-  oscillation_recovery: true  
+  oscillation_recovery: true
+  oscillation_recovery_min_duration: 10.0

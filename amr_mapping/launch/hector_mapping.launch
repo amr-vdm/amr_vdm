@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="rviz_file" default="$(find amr_mapping)/rviz/mapping.rviz"/>
+
+    <node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
+        <rosparam file="$(find amr_mapping)/params/hector_mapping.yaml" command="load" /> 
+        <remap from="map" to="/map" />        
+    </node>
+
+    <!-- Launch Rviz -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rviz_file)"/>
+
+</launch>

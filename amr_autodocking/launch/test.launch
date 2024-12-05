@@ -1,6 +1,0 @@
-<launch>
-    <node name="find_last_tf" pkg="amr_autodocking" type="find_last_tf.py" output="screen">
-        <rosparam command="load" file="$(find amr_autodocking)/scripts/find_dock_tf/params/find_last_tf_params.yaml"/>
-    </node>
-      
-</launch>

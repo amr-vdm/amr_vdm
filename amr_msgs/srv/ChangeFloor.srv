@@ -1,0 +1,6 @@
+# Request
+string floor_name
+geometry_msgs/Pose initial_pose
+---
+# Response
+bool success

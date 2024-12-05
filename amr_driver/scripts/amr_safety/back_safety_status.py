@@ -2,63 +2,58 @@
 import rospy
 
 from sick_safetyscanners.msg import OutputPathsMsg
-from std_msgs.msg import Bool
+from std_msgs.msg import Int16, Bool
 from amr_msgs.msg import SafetyStatusStamped, SafetyStatus
+
 
 class BackScannerSafety():
 
     def __init__(self):
-
-        # Variables:
-        self.is_turn_off_ = False
-        self.is_running_  = False
-        self.obstacle_state_      = SafetyStatus.NORMAL
-        self.prev_obstacle_state_ = SafetyStatus.NORMAL
+        # Params:
+        self.frame_id = rospy.get_param("~frame_id", "back_laser_link")
 
         # Publishers:
         self.pub_back_scanner_status  = rospy.Publisher("back_scanner_status", SafetyStatusStamped, queue_size=5)
 
-        # Subscribers:
-        rospy.Subscriber("/sick_safetyscanners_back/output_paths", OutputPathsMsg, self.back_safety_state_callback)
-        rospy.Subscriber("turn_off_back_safety", Bool, self.turn_off_back_safety_callback)
-        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
-    
-    def runonce_callback(self,msg: Bool):
-        self.is_running_ = msg.data
-    
-    def turn_off_back_safety_callback(self, msg:Bool):
-        self.is_turn_off_ = msg.data
+        # Variables:
+        self.is_turn_off_back_scanner = False
+        self.prev_obstacle_state = SafetyStatus.NORMAL 
 
-    def back_safety_state_callback(self, msg: OutputPathsMsg):
+        # Subscribers:
+        rospy.Subscriber("/sick_safetyscanners_back/output_paths", OutputPathsMsg, self.backSafetyStatusCb)
+        rospy.Subscriber("turn_off_back_safety", Bool, self.turnOffBackSafetyScannerCb)
+    
+
+    def turnOffBackSafetyScannerCb(self, msg:Bool):
+        self.is_turn_off_back_scanner = msg.data
+
+
+    def backSafetyStatusCb(self, msg: OutputPathsMsg):
         
-        if self.is_turn_off_ or not self.is_running_:
+        if self.is_turn_off_back_scanner:
             return
         
         if not msg.status[0]:
-            self.obstacle_state_ = SafetyStatus.PROTECTED
+            obstacle_state = SafetyStatus.PROTECTED
+        elif not msg.status[1]:
+            obstacle_state = SafetyStatus.WARNING_LV1
         else:
-            self.obstacle_state_ = SafetyStatus.NORMAL
+            obstacle_state = SafetyStatus.NORMAL
         
-        if self.obstacle_state_ != self.prev_obstacle_state_:
-            if self.obstacle_state_ == SafetyStatus.PROTECTED:
-                rospy.logwarn("BackScannerSafety: Detect obstacle!")            
-            else:
-                rospy.loginfo("BackScannerSafety: No obstacle in field.")
-
+        if obstacle_state != self.prev_obstacle_state:
             safety = SafetyStatusStamped()
-            safety.header.frame_id = "back_laser_link"
+            safety.header.frame_id = self.frame_id
             safety.header.stamp = rospy.Time.now()
-            safety.safety_status.status = self.obstacle_state_
+            safety.safety_status.status = obstacle_state
             self.pub_back_scanner_status.publish(safety)
-
-        self.prev_obstacle_state_ = self.obstacle_state_     
+            self.prev_obstacle_state = obstacle_state
 
 
 if __name__== '__main__':
     rospy.init_node("back_scanner_safety_status")
     try:
         back_scanner_safety = BackScannerSafety()
-        rospy.loginfo("BackScannerSafety node is running!")
+        rospy.loginfo("%s node is running!", rospy.get_name())
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

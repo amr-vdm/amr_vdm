@@ -16,7 +16,7 @@
   <arg name="global_frame_id" default="/map"/>
 
   <group if="$(eval namespace != '')" ns="$(arg namespace)">
-    <node pkg="amcl" type="amcl" name="amcl">
+    <node pkg="amcl" type="amcl" name="amcl" output="screen">
       <param name="use_map_topic"             value="$(arg use_map_topic)"/>
       <param name="odom_model_type"           value="diff-corrected"/>
       <param name="gui_publish_rate"          value="10.0"/>

@@ -9,7 +9,7 @@ least_sq_radius_thresh: 0.0001
 max_line_gap: 0.02              # The maximum distance between two points in the same line
 min_line_length: 0.05           # Lines shorter than this are not published
 min_range: 0.02                 # Points closer than this are ignored
-max_range: 1.0                  # Points farther than this are ignored
+max_range: 2.0                  # Points farther than this are ignored
 min_split_dist: 0.04            # When performing "split" step of split and merge, a split between two points results when the two points are at least this far apart
 outlier_dist: 0.03              # Points who are at least this distance from all their neighbours are considered outliers
 min_line_points: 5              # Lines with fewer points than this are not published.

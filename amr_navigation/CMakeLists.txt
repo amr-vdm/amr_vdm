@@ -29,6 +29,7 @@ include_directories(
 # Mark other files for installation (e.g. launch and bag files, etc.)
 install(DIRECTORY
   launch
+  maps
   mprim
   params
   rviz

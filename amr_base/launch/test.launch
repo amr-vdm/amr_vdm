@@ -1,0 +1,5 @@
+<launch>
+      <node name="test" pkg="amr_driver" type="test.py" output="screen">
+            <rosparam command="load" file="$(find amr_autodocking)/config/autodock_params.yaml"/>
+      </node>
+</launch>

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Grid1/Offset1
+        - /RobotModel1
         - /TF1/Frames1
         - /TF1/Tree1
         - /Local Map1/Costmap1
@@ -864,10 +865,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 52.33660125732422
-      Target Frame: base_link
-      X: 3.13321852684021
-      Y: -1.0074069499969482
+      Scale: 36.18701934814453
+      Target Frame: base_footprint
+      X: 0.9381531476974487
+      Y: 0.0038590990006923676
     Saved: ~
 Window Geometry:
   Displays:

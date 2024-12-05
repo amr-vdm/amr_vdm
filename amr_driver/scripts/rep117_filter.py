@@ -5,7 +5,7 @@ import rospy
 from std_msgs.msg import Bool
 from sensor_msgs.msg import LaserScan
 
-class Rep117FilterLaser():
+class rep117_filter_laser():
     def __init__(self):
         self.pub = rospy.Publisher('scan_filtered', LaserScan, queue_size=10)
         rospy.Subscriber('scan', LaserScan, self.callback)
@@ -35,8 +35,8 @@ class Rep117FilterLaser():
 if __name__ == '__main__':
     rospy.init_node('rep117_filter')
     try:
-        rep117_filter_oj = Rep117FilterLaser()
-        rospy.loginfo("PoseEstimation node is running.")
+        rep117_filter_oj = rep117_filter_laser()
+        rospy.loginfo("%s node is running", rospy.get_name())
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

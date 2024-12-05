@@ -2,7 +2,7 @@
     <arg name="planner_name"     default="navfn"/>
     <arg name="controller_name"  default="dwb"/>
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen" clear_params="true">        
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen" clear_params="true">
         <!-- Load move base params -->
         <rosparam file="$(find amr_navigation)/params/move_base.yaml" command="load" />
         
@@ -15,15 +15,14 @@
         <!-- Load global costmap params -->
         <rosparam file="$(find amr_navigation)/params/costmaps/common_costmap.yaml" command="load" ns="global_costmap" subst_value="true" />
         <rosparam file="$(find amr_navigation)/params/costmaps/global_costmap.yaml" command="load" />
-        
+
         <!-- Load local costmap params -->
         <rosparam file="$(find amr_navigation)/params/costmaps/common_costmap.yaml" command="load" ns="local_costmap" subst_value="true" />
         <rosparam file="$(find amr_navigation)/params/costmaps/local_costmap.yaml" command="load" subst_value="true" />
-        
+
         <remap from="map"     to="/map" />
         <remap from="cmd_vel" to ="/amr/mobile_base_controller/cmd_vel" />
         <remap from="marker"  to="move_base_node/DWBLocalPlanner/markers" />
         <remap from="odom"    to="/amr/mobile_base_controller/odom" /> <!---->
-        <!-- <remap from="/move_base_simple/goal" to="/mbs/goal"/> -->
     </node>
 </launch>

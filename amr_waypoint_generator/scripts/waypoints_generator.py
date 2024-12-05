@@ -98,7 +98,7 @@ class WaypointsGenerator(object):
 
 if __name__ == "__main__":
     
-    file_name = "/home/amr/catkin_ws/src/amr_vdm/amr_waypoint_generator/config/amr_waypoints.yaml"
+    file_name = "/home/amr/catkin_ws/src/amr/amr_waypoint_generator/config/amr_waypoints.yaml"
     
     rospy.init_node("waypoints_generator")
 

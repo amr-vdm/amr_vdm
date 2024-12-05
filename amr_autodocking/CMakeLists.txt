@@ -13,8 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   actionlib_msgs
   geometry_msgs
+  amr_msgs
   message_generation
   tf
+  laser_line_extraction
 )
 
 # ## Add folders to be run by python nosetests
@@ -33,6 +35,7 @@ generate_messages(
   std_msgs
   actionlib_msgs
   geometry_msgs
+  amr_msgs
 )
 
 catkin_package(
@@ -43,6 +46,7 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
+  scripts/autodock_client_test.py
   scripts/autodock_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

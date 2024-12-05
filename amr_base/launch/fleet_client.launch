@@ -1,16 +1,16 @@
 <launch>
-  <node name="follow_waypoints" pkg="follow_waypoints" type="follow_waypoints_server.py" 
+  <!-- <node name="follow_waypoints" pkg="follow_waypoints" type="follow_waypoints_server.py" 
         respawn="true" output="screen">
         <param name="map_frame" type="string" value="map"/>
         <param name="robot_frame" type="string" value="base_footprint"/>
         <param name="distance_tolerance" type="double" value="3.0"/>
-        <param name="max_speed" type="double" value="0.5"/>
+        <param name="max_speed" type="double" value="0.7"/>
         <param name="action_name" type="string" value="/follow_waypoints_server"/>
         <param name="find_closest_point" type="bool" value="true"/>
         <param name="step_distance" type="double" value="5.0"/>
         <param name="debug" type="bool" value="false"/>
         <param name="update_frequency" type="double" value="10.0"/>
-  </node>
+  </node> -->
 
   <!-- <node name="fake_battery" pkg="follow_waypoints" type="fake_battery.py" 
         respawn="true" output="screen">
@@ -21,20 +21,22 @@
   <!-- launch the free fleet client first -->
   <node name="amr_free_fleet_client_node" pkg="free_fleet_client_ros1"
         type="free_fleet_client_ros1" respawn="true" output="screen">
-        <param name="fleet_name" type="string" value="amr_vdm"/>
-        <param name="robot_name" type="string" value="amr_002"/>
+        <param name="fleet_name" type="string" value="amr_tayrua"/>
+        <param name="robot_name" type="string" value="amr002"/>
         <param name="level_name" type="string" value="L1"/>
         <param name="wait_for_intialpose" type="bool" value="true"/>
         <param name="wait_timeout" type="double" value="10.0"/>
         <param name="wait_timeout_intialpose" type="double" value="600.0"/>
         <param name="update_frequency" type="double" value="10.0"/>
         <param name="publish_frequency" type="double" value="5.0"/>
-        <param name="dds_domain" type="int" value="42"/>
+        <param name="dds_domain" type="int" value="43"/>
         <param name="dds_state_topic" type="string" value="robot_state"/>
         <param name="dds_mode_request_topic" type="string" value="mode_request"/>
         <param name="dds_path_request_topic" type="string" value="path_request"/>
         <param name="dds_destination_request_topic" type="string" value="destination_request"/>
         <param name="dds_dock_request_topic" type="string" value="dock_request"/>
+        <param name="dds_cancel_request_topic" type="string" value="cancel_request"/>
+        <param name="dds_localize_request_topic" type="string" value="localize_request"/>
         <param name="cmd_runonce_topic" type="string" value="/amr/state_runonce_nav"/>
         <param name="cmd_pause_topic" type="string" value="/amr/PAUSE_AMR"/>
         <param name="cmd_reset_topic" type="string" value="/amr/RESET_AMR"/>
@@ -42,9 +44,11 @@
         <param name="mode_error_topic" type="string" value="/amr/error_mode"/>
         <param name="emergency_stop_topic" type="string" value="/amr/emergency_stop"/>
         <param name="battery_state_topic" type="string" value="/battery_state"/>
-        <param name="is_intialpose_topic" type="string" value="/amr/is_intialpose"/>
-        <param name="follow_waypoints_server_name" type="string" value="follow_waypoints_server"/>
+        <param name="floor_name_topic" type="string" value="/amr/floor_name"/>
+        <param name="move_base_server_name" type="string" value="/move_base"/>
         <param name="autodock_server_name" type="string" value="/amr/autodock_action"/>
+        <param name="localize_server_name" type="string" value="/amr/change_floor"/>
+        <param name="max_speed" type="double" value="0.8"/>
         <param name="max_dist_to_first_waypoint" type="double" value="1000.0"/>
   </node>
 </launch>

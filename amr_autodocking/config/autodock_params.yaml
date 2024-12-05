@@ -1,61 +1,55 @@
 # General configure
-tf_expiry: 0.3                # [s]
-dock_timeout: 240             # [s]
-slider_timeout: 15            # [s] - Waiting time for slider motor reachs max position
-controller_frequency: 20.0    # [hz]
-gear_ratio: 10.33
-encoder_resolution: 82640.0
-wheel_radius: 0.0625
-back_laser_offset: 0.52322    # Distance from base_link to back_laser_link when slider at original position
-steer_distance_threshold: 0.63
+tf_expiry: 0.3                            # [s]
+dock_timeout: 240.0                       # [s]
+time_for_waiting_dock_frame: 600.0        # [s]
+slider_timeout: 15                        # [s] - Waiting time for slider motor reachs max position
+controller_frequency: 20.0                # [hz]
+# control_duration: 80.0
+# gear_ratio: 10.33
+# encoder_resolution: 82640.0
+# wheel_radius: 0.0625
+back_laser_offset: 0.52322                # Distance from base_link to back_laser_link when slider at original position
+steer_distance_threshold: 0.6
 
 # Frames
 base_link: base_link
-charger_frame: charger_frame
-first_frame: first_frame
+charger_link: charger_frame
+first_frame: cart_frame
 last_frame: last_frame
 tag_frame: tag_frame
 parallel_frame: parallel_frame
-
-# Custom dock
-# custom_dock_name:
-#   clr55_dropoff:
-#     action1:
-#       rotate: -92
-#       move: -0.5
-#     action2:
-#       rotate: 92
+dropoff_frame: m104_dropoff_frame
 
 # Goal threshold
-stop_trans_diff: 0.02         # [m]
+stop_yaw_diff: 0.02           # [rad]
+stop_trans_diff: 0.01         # [m]
 y_tolerance_pid: 0.015        # [m]
-max_parallel_offset: 0.02     # [m] - will move to parallel.c if exceeded
-yaw_predock_tolerance: 0.055  # [rad]
-stop_yaw_diff: 0.05           # [rad]
+yaw_predock_tolerance: 0.02   # [rad]
+max_parallel_offset: 0.01     # [m] - will move to parallel.c if exceeded
 predock_tf_samples: 5         # tf samples to avg, parallel.c validation
 
 # Velocity informations
+linear_vel_range: [-0.2, 0.2]
+angular_vel_range: [-0.3, 0.3]    
 max_angular_vel: 0.3                  # [rad/s]
 min_angular_vel: 0.05                 # [rad/s]
-max_linear_vel: 0.3
-min_linear_vel: 0.035                 # [m/s]
-# max_linear_vel: 0.1
+# max_linear_vel: 0.2
 # min_linear_vel: 0.035                 # [m/s]
-max_linear_vel_predock: 0.15      
+max_linear_vel: 0.1
+min_linear_vel: 0.035                 # [m/s]
+max_linear_vel_predock: 0.15                   # [m/s]
+max_x_pid_steer: 0.055                # [m/s] - Max pid's linear velocity when use pid controller in steer state
+min_x_pid_steer: 0.045                 # [m/s] - Min pid's linear velocity when use pid controller in steer state
+max_x_pid_lastmile: 0.04             # [m/s] - Max pid's linear velocity when use pid controller in lastmile state
+min_x_pid_lastmile: 0.035              # [m/s] - Min pid's linear velocity when use pid controller in lastmile state
 max_x_lastmile: 0.03                  # [m/s] - Max linear velocity in lastmile state
-max_x_out_dock: 0.2                   # [m/s] - Max linear velocity when go out dock
-max_x_correction: 0.05                # [m/s] - Max linear velocity when use correct_robot function
-max_x_with_retry_high_current: 0.1    # [m/s] - Max linear velocity when move with encoder
-max_x_pid_steer: 0.035                # [m/s] - Max pid's linear velocity when use pid controller in steer state
-min_x_pid_steer: 0.02                 # [m/s] - Min pid's linear velocity when use pid controller in steer state
-max_x_pid_lastmile: 0.035             # [m/s] - Max pid's linear velocity when use pid controller in lastmile state
-min_x_pid_lastmile: 0.02              # [m/s] - Min pid's linear velocity when use pid controller in lastmile state
-max_x_go_out_dock: 0.2                # [m/s] - Max linear velocity when go out dock
-max_x_custom_rotation: 0.1            # [m/s] - Max linear velocity when do custom rotation line 56
-max_w_rotate_to_dock: 0.18            # [rad/s] - Max angular velocity when rotate with odom
-max_w_correction: 0.12                # [rad/s] - Max angular velocity when use correct_robot function
-max_w_predock: 0.09                   # [rad/s] - Max angular velocity when use do_predock function
-max_w_custom_rotation: 0.2            # [rad/s] - Max angular velocity when do custom rotation line 56
+# max_x_with_retry_high_current: 0.1    # [m/s] - Max linear velocity when move with encoder
+# max_x_out_dock: 0.2                   # [m/s] - Max linear velocity when go out dock
+# max_x_correction: 0.05                # [m/s] - Max linear velocity when use correct_robot function
+# max_x_go_out_dock: 0.2                # [m/s] - Max linear velocity when go out dock
+# max_x_custom_rotation: 0.1            # [m/s] - Max linear velocity when do custom rotation line 56
+# max_angular_accel: 3.0
+# angular_vel_lim: 0.3
 
 k_p: 0.8
 k_i: 0.0

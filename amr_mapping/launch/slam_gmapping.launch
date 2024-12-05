@@ -4,7 +4,7 @@
 
     <!-- Launch gmapping node -->
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">	
-        <rosparam file="$(find amr_mapping)/params/gmapping/gmapping.yaml" command="load" /> 
+        <rosparam file="$(find amr_mapping)/params/gmapping.yaml" command="load" /> 
         
         <remap from="scan" to="/front_scan_rep117"/>
     </node>
