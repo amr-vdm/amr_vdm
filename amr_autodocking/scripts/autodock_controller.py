@@ -675,7 +675,7 @@ class AutoDockStateMachine(AutoDockServer):
                         if abs(y) > self.cfg.max_parallel_offset:
                             if mode == DockMode.MODE_PICKUP:
                                 if not self.auto_correction(
-                                    x, y, 0.25, self.cfg.back_laser_offset, is_dock_limit
+                                    x, y, 0.28, self.cfg.back_laser_offset, is_dock_limit
                                 ) and not self.correct_robot(
                                     y, False, rotate_angle, rotate_orientation
                                 ):

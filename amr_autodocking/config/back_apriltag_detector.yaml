@@ -22,16 +22,16 @@ transport_hint:    "raw"      # default: raw, see http://wiki.ros.org/image_tran
 #   ]
 standalone_tags:
   [
-    {id: 0, size: 0.04, name: tag_frame_0},
-    {id: 1, size: 0.04, name: tag_frame_1},
-    {id: 2, size: 0.04, name: tag_frame_2},
-    {id: 3, size: 0.04, name: tag_frame_3},
-    {id: 4, size: 0.04, name: tag_frame_4},
-    {id: 5, size: 0.04, name: tag_frame_5},
-    {id: 6, size: 0.04, name: tag_frame_6},
-    {id: 7, size: 0.04, name: tag_frame_7},
-    {id: 8, size: 0.04, name: tag_frame_8},
-    {id: 9, size: 0.04, name: tag_frame_9},
+    {id: 0, size: 0.042, name: tag_frame_0},
+    {id: 1, size: 0.042, name: tag_frame_1},
+    {id: 2, size: 0.042, name: tag_frame_2},
+    {id: 3, size: 0.042, name: tag_frame_3},
+    {id: 4, size: 0.042, name: tag_frame_4},
+    {id: 5, size: 0.042, name: tag_frame_5},
+    {id: 6, size: 0.042, name: tag_frame_6},
+    {id: 7, size: 0.042, name: tag_frame_7},
+    {id: 8, size: 0.042, name: tag_frame_8},
+    {id: 9, size: 0.042, name: tag_frame_9},
 
   ]
 # Tag bundle definitions
