@@ -70,8 +70,7 @@ class PCWritePLC(Type1E):
 
 
     def initParams(self):
-        print(f"NODE: {rospy.get_name()}")
-        print("PARAMETERS")
+        print("PC_WRITE_PLC params:")
 
         param_names = [attr for attr in dir(self.params) if not callable(getattr(self.params, attr)) and not attr.startswith("__")]
 
@@ -91,7 +90,7 @@ class PCWritePLC(Type1E):
     def loadFinishedCb(self, msg):
         self.batchwrite_bitunits(self.params.load_finished_bit, [1])
         os.system('rosnode kill /check_camera_connection')
-        rospy.logwarn("AMR is ready for running!")
+        rospy.loginfo("AMR is ready for running!")
 
     def cmdSliderCb(self, msg: Int16):
         self.slider_cmd = msg.data
@@ -109,18 +108,18 @@ class PCWritePLC(Type1E):
 
         if self.status_protected_field:
             self.batchwrite_bitunits(self.params.obstacle_detecting_bit, [1])  # M4
-            rospy.logwarn("Detect obtacles in protected filed!")
+            rospy.logerr("Detect obtacles in protected filed!")
         else:
             self.batchwrite_bitunits(self.params.obstacle_detecting_bit, [0])
 
     def safetyTurnZoneCb(self, msg: SafetyZone):
         if (msg.zone == SafetyZone.SMALL_ZONE):
             self.batchwrite_bitunits(self.params.safety_zone_bit, [1,1])       # M28: Front - M29: Back
-            rospy.logwarn("Switched back and front safety zone to small zone!")
+            rospy.loginfo("Switched back and front safety zone to small zone!")
 
         elif (msg.zone == SafetyZone.BIG_ZONE):
             self.batchwrite_bitunits(self.params.safety_zone_bit, [0,1])
-            rospy.logwarn("Switched back and front safety zone to default zone!")
+            rospy.loginfo("Switched back and front safety zone to default zone!")
 
     def isInitialPoseCb(self, msg: Bool):
         if msg.data:
@@ -166,7 +165,7 @@ class PCWritePLC(Type1E):
 if __name__== '__main__':
     try:
         PC_bridge_PLC = PCWritePLC()
-        rospy.logwarn("%s node is running!", rospy.get_name())
+        rospy.loginfo("%s node is running!", rospy.get_name())
         rospy.spin()
         PC_bridge_PLC.close()
     except rospy.ROSInterruptException:

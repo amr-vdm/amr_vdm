@@ -1,8 +1,8 @@
 base_local_planner: rotation_shim_controller/RotationShimController
 RotationShimController:
   # primary_controller: dwb_controller/DWBController
-  primary_controller: vector_pursuit_controller/VectorPursuitController
-  # primary_controller: teb_local_planner/TebLocalPlannerROS
+  # primary_controller: vector_pursuit_controller/VectorPursuitController
+  primary_controller: teb_local_planner/TebLocalPlannerROS
   controller_frequency: 20.0
   transform_tolerance: 0.5
   simulate_ahead_time: 1.0
@@ -134,7 +134,7 @@ RotationShimController:
     dt_ref: 0.3                              
     dt_hysteresis: 0.1                       
     global_plan_overwrite_orientation: true
-    allow_init_with_backwards_motion: true  
+    allow_init_with_backwards_motion: false  
     max_global_plan_lookahead_dist: 1.5 #3.0 
     force_reinit_new_goal_dist: 1.0
     # force_reinit_new_goal_angular:           
@@ -185,7 +185,7 @@ RotationShimController:
     min_obstacle_dist: 0.015 # 0.481 Minimum desired separation from obstacles
     inflation_dist: 0.02 # Buffer zone around obstacles with non-zero penalty costs 
                         # (should be larger than min_obstacle_dist in order to take effect)
-    dynamic_obstacle_inflation_dist: 0.5  # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
+    dynamic_obstacle_inflation_dist: 0.25 # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
                                           # (should be larger than min_obstacle_dist in order to take effect)     
     include_dynamic_obstacles: true         
     include_costmap_obstacles: true          
@@ -211,11 +211,11 @@ RotationShimController:
     weight_acc_lim_y: 1.0     
     weight_acc_lim_theta: 10.0 #1.0  
     weight_kinematics_nh: 3000.0   # 10000.0  
-    weight_kinematics_forward_drive: 1000.0
+    weight_kinematics_forward_drive: 10000.0
     weight_kinematics_turning_radius: 1.0
     weight_optimaltime: 10.0
     weight_shortest_path: 0.0   # Optimization weight for contracting the trajectory w.r.t. path length 
-    weight_obstacle: 50.0
+    weight_obstacle: 1000.0
     weight_inflation: 0.2   # 1.0           
     weight_dynamic_obstacle: 1.0           
     weight_dynamic_obstacle_inflation: 0.2

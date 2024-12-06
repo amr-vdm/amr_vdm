@@ -241,7 +241,7 @@ Visualization Manager:
       Displays:
         - Alpha: 0.699999988079071
           Class: rviz/Map
-          Color Scheme: map
+          Color Scheme: costmap
           Draw Behind: true
           Enabled: true
           Name: Costmap
@@ -323,7 +323,7 @@ Visualization Manager:
               Value: true
             - Alpha: 0.699999988079071
               Class: rviz/Map
-              Color Scheme: map
+              Color Scheme: costmap
               Draw Behind: true
               Enabled: true
               Name: Costmap

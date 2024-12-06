@@ -1,5 +1,5 @@
 # General configure
-tf_expiry: 0.3                            # [s]
+tf_expiry: 0.5                            # [s]
 dock_timeout: 240.0                       # [s]
 time_for_waiting_dock_frame: 600.0        # [s]
 slider_timeout: 15                        # [s] - Waiting time for slider motor reachs max position
@@ -35,7 +35,7 @@ max_angular_vel: 0.3                  # [rad/s]
 min_angular_vel: 0.05                 # [rad/s]
 # max_linear_vel: 0.2
 # min_linear_vel: 0.035                 # [m/s]
-max_linear_vel: 0.1
+max_linear_vel: 0.3
 min_linear_vel: 0.035                 # [m/s]
 max_linear_vel_predock: 0.15                   # [m/s]
 max_x_pid_steer: 0.055                # [m/s] - Max pid's linear velocity when use pid controller in steer state

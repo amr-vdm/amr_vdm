@@ -35,7 +35,7 @@ class AutoDockStateMachine(AutoDockServer):
             rospy.set_param("/use_sim_time", True)
 
         rospy.init_node("auto_dock_node")
-        rospy.loginfo("%s node is running!", rospy.get_name())
+        rospy.loginfo("Initialized auto_dock_node.")
 
         if fake_clock:
             rospy.logwarn("WARNING!!!! fake clock enabled! now disable use_sim_time")
@@ -50,8 +50,7 @@ class AutoDockStateMachine(AutoDockServer):
         self.dock_state_ = DockState.IDLE
 
     def init_params(self):
-        print(f"NODE: {rospy.get_name()}")
-        print("PARAMETERS")
+        print("Autodock params:")
         param_names = [
             attr
             for attr in dir(self.cfg)
@@ -436,8 +435,6 @@ class AutoDockStateMachine(AutoDockServer):
 
                 elif flag:
                     rospy.logwarn("BackLaser is out dropoff dock, it's wrong. Please check!")
-                    print(f"self.left_range_: {self.left_range_}")
-                    print(f"self.right_range_: {self.right_range_}")
                     flag = False  # Reset flag for calculate total time
 
                 dock_tf = self.get_tf(self.cfg.parallel_frame)
@@ -638,10 +635,7 @@ class AutoDockStateMachine(AutoDockServer):
                     dock_tf = self.get_tf(dock_name)
 
                     if dock_tf is None:
-                        if dock_name is not None:
-                            rospy.logerr(f"Can not detect dock_name: {dock_name}!")
-                        else:
-                            rospy.logerr(f"Can not detect all frame!")
+                        rospy.logerr(f"Can not detect all frame!")
                         self.error_pub_.publish(4)
                         return False
 

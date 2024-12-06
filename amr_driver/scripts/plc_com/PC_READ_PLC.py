@@ -82,8 +82,7 @@ class PCReadPLC(Type1E):
         self.isPubWaitDockBit = False
 
     def initParams(self):
-        print(f"NODE: {rospy.get_name()}")
-        print("PARAMETERS")
+        print("PC_READ_PLC params:")
 
         param_names = [attr for attr in dir(self.params) if not callable(getattr(self.params, attr)) and not attr.startswith("__")]
 
@@ -211,13 +210,13 @@ class PCReadPLC(Type1E):
             # bit_array[0] - M400: EMS bit
             if (bit_array[0] != self.Emergency_STOP_state):
                 if bit_array[0]:
-                    WARN("Emergency Stop State: ON")
+                    ERROR("Emergency Stop State: ON")
                     self.pub_stop_amr.publish(True)
                     self.pub_EMS.publish(True)
                     self.Emergency_STOP_state = 1
 
                 else:
-                    WARN("Emergency Stop State: OFF")
+                    INFO("Emergency Stop State: OFF")
                     self.pub_stop_amr.publish(False)
                     self.pub_EMS.publish(False)
                     self.Emergency_STOP_state = 0
@@ -236,7 +235,7 @@ class PCReadPLC(Type1E):
                             self.pause_timer += (1 / self.params.pub_frequency)
                             
                         else:
-                            WARN("Pause State: OFF")
+                            INFO("Pause State: OFF")
                             self.pub_cmd_pause_AMR.publish(False)
                             self.pub_stop_amr.publish(False)
                             self.Pause_AMR_state = 0
@@ -245,7 +244,7 @@ class PCReadPLC(Type1E):
 
                     # bit_array[3] - M403: cancel bit
                     if bit_array[3]:
-                        WARN("Cancel Bit State: ON")
+                        INFO("Cancel Bit State: ON")
                         self.pub_cmd_cancel_AMR.publish(True)
 
                     # bit_array[4] - M404: high pickup current bit
@@ -309,7 +308,7 @@ class PCReadPLC(Type1E):
                 if bit_array[13]:
                     msg = Empty()
                     self.pub_cmd_reset_AMR.publish(msg)
-                    WARN("PLC reset AMR!")
+                    INFO("PLC reset AMR!")
                 self.RESET_AMR_state = bit_array[13]
 
             # bit_array[14] - M414: wait_dock bit
@@ -326,7 +325,7 @@ class PCReadPLC(Type1E):
 if __name__== '__main__':
     try:
         PC_bridge_PLC = PCReadPLC()
-        rospy.logwarn("%s node is running!", rospy.get_name())
+        rospy.loginfo("%s node is running!", rospy.get_name())
         PC_bridge_PLC.run()
     except rospy.ROSInterruptException:
         pass

@@ -161,16 +161,16 @@ class AutoDockServer:
         self.back_apriltag_detector_cli_ = rospy.ServiceProxy(
             "/back_camera/apriltag_ros/enable_detector", SetBool
         )
-        rospy.logwarn("Connecting to /back_camera/apriltag_ros/enable_detector service...")
+        rospy.loginfo("Connecting to /back_camera/apriltag_ros/enable_detector service...")
         self.back_apriltag_detector_cli_.wait_for_service()
-        rospy.logwarn("Connected to /back_camera/apriltag_ros/enable_detector service.")
+        rospy.loginfo("Connected to /back_camera/apriltag_ros/enable_detector service.")
 
         self.front_apriltag_detector_cli_ = rospy.ServiceProxy(
             "/front_camera/apriltag_ros/enable_detector", SetBool
         )
-        rospy.logwarn("Connecting to /front_camera/apriltag_ros/enable_detector service...")
+        rospy.loginfo("Connecting to /front_camera/apriltag_ros/enable_detector service...")
         self.front_apriltag_detector_cli_.wait_for_service()
-        rospy.logwarn("Connected to /front_camera/apriltag_ros/enable_detector service.")
+        rospy.loginfo("Connected to /front_camera/apriltag_ros/enable_detector service.")
 
         # Create line extraction service
         self.front_line_extraction_client = rospy.ServiceProxy(
@@ -179,10 +179,10 @@ class AutoDockServer:
         self.back_line_extraction_client = rospy.ServiceProxy(
             "/back_line_extractor/enable_detector", SetBool
         )
-        rospy.logwarn("Connecting to front & back line extraction detector service...")
+        rospy.loginfo("Connecting to front & back line extraction detector service...")
         self.front_line_extraction_client.wait_for_service()
         self.back_line_extraction_client.wait_for_service()
-        rospy.logwarn("Connected to front & back line extraction detector service.")
+        rospy.loginfo("Connected to front & back line extraction detector service.")
 
         # Publishers
         self.cmd_vel_pub_ = rospy.Publisher(
@@ -440,8 +440,6 @@ class AutoDockServer:
         """
         `signal = False`: Disable | `signal = True`: Enable
         """
-        msg = "disable" if not signal else "enable"
-
         try:
             self.back_apriltag_detector_cli_.call(signal)
             self.front_apriltag_detector_cli_.call(not signal)
@@ -454,11 +452,7 @@ class AutoDockServer:
         """
         `laser_name`: "front" or "back"
         """
-        msg = "disable" if not signal else "enable"
-
         try:
-            rospy.logwarn(f"Waiting {msg} line detector from server...")
-
             if laser_name == "front":
                 result = self.front_line_extraction_client.call(signal)
             elif laser_name == "back":
@@ -476,7 +470,7 @@ class AutoDockServer:
 
     def reset_all(self):
         """
-        Reset some values when start autodock
+        Reset before starting autodock
         """
         self.dock_state_ = DockState.IDLE
         self.is_pause_ = False
@@ -527,8 +521,8 @@ class AutoDockServer:
         `signal = 1`: Slider go out
         `signal = 2`: Slider go in
         """
-        msg = "OUT" if signal == 1 else "IN"
-        rospy.logwarn(f"PUBLISHING SLIDER MOTOR GO {msg}!")
+        msg = "out" if signal == 1 else "in"
+        rospy.loginfo(f"Publishing slider motor go {msg}!")
 
         self.cmd_slider_pub_.publish(signal)
 
@@ -571,7 +565,7 @@ class AutoDockServer:
             rospy.logerr(f"State: [{state_str}] | {printout}!")
 
         else:
-            rospy.logwarn(f"State: [{state_str}] | {printout}")
+            rospy.loginfo(f"State: [{state_str}] | {printout}")
 
         if self.run_server:
             self.feedback_msg.state = state
@@ -626,7 +620,7 @@ class AutoDockServer:
                 self.set_state(self.dock_state_, "Pause Requested!")
                 self.pause_flag_ = True
                 self.dock_timeout_ -= (rospy.Time.now() - self.start_time_).secs
-                print("TIME out remain: ", self.dock_timeout_)
+                rospy.loginfo(f"Timeout docking remain {self.dock_timeout_}s ")
 
         else:
             if self.pause_flag_:
@@ -793,13 +787,11 @@ class AutoDockServer:
                 # This makes sure that the robot is actually moving linearly
                 time_now = rospy.Time.now()
                 dt = (time_now - prev_time).to_sec()
-                # print('-----------------------------------------')
                 l_vel_pid = _pid.update(forward, forward - dx, dt)
                 ang_vel = utils.sat_proportional_filter(
                     dyaw, abs_max=self.cfg.min_angular_vel, factor=0.2
                 )
                 l_vel = utils.bin_filter(dx, l_vel_pid)
-                # print('l_vel_pid: ', l_vel_pid)
 
                 self.publish_velocity(linear_vel=l_vel, angular_vel=ang_vel)
                 prev_time = time_now
@@ -855,11 +847,9 @@ class AutoDockServer:
 
                 time_now = rospy.Time.now()
                 dt = (time_now - prev_time).to_sec()
-                # print('-----------------------------------------')
                 angular_vel_pid = _pid.update(rotate, rotate - dyaw, dt)
                 sign = 1 if rotate > 0 else -1
                 angular_vel = sign * angular_vel_pid
-                # print('angular_vel_pid: ', angular_vel_pid)
 
                 self.publish_velocity(angular_vel=angular_vel)
                 prev_time = time_now

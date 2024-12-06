@@ -99,31 +99,31 @@ class ChangeMapServer():
         # Service:
         # Change map service
         self.change_map_client = rospy.ServiceProxy("/change_map", LoadMap)
-        self.logwarn("Connecting to change map service...")
+        self.loginfo("Connecting to change map service...")
         self.change_map_client.wait_for_service()
         self.loginfo("Connected to change map service.")
 
         # Change virtual wall map
         self.change_virtual_wall_map_client = rospy.ServiceProxy("/virtual_walls/change_map", LoadMap)
-        self.logwarn("Connecting to /virtual_walls/change_map service...")
+        self.loginfo("Connecting to /virtual_walls/change_map service...")
         self.change_virtual_wall_map_client.wait_for_service()
         self.loginfo("Connected to /virtual_walls/change_map service.")
 
         # Change obstacle map
         self.change_obtascle_map_client = rospy.ServiceProxy("/obstacle_filter/change_map", LoadMap)
-        self.logwarn("Connecting to /obstacle_filter/change_map service...")
+        self.loginfo("Connecting to /obstacle_filter/change_map service...")
         self.change_obtascle_map_client.wait_for_service()
         self.loginfo("Connected to /obstacle_filter/change_map service.")
 
         # Change safety filter map
         self.change_safety_filter_map_client = rospy.ServiceProxy("/safety_filter/change_map", LoadMap)
-        self.logwarn("Connecting to /safety_filter/change_map service...")
+        self.loginfo("Connecting to /safety_filter/change_map service...")
         self.change_safety_filter_map_client.wait_for_service()
         self.loginfo("Connected to /safety_filter/change_map service.")
 
         # Clear costmap service
         self.clear_all_costmap = rospy.ServiceProxy("/move_base_node/clear_costmaps", Empty)
-        self.logwarn("Connecting to /move_base_node/clear_costmaps service...")
+        self.loginfo("Connecting to /move_base_node/clear_costmaps service...")
         self.clear_all_costmap.wait_for_service()
         self.loginfo("Connected to /move_base_node/clear_costmaps service.")
 
@@ -295,7 +295,7 @@ if __name__== '__main__':
     rospy.init_node('amr_change_map')
     try:
         change_map_server = ChangeMapServer()
-        change_map_server.logwarn("ChangeMap server node is running!")
+        change_map_server.loginfo("ChangeMap server node is running!")
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

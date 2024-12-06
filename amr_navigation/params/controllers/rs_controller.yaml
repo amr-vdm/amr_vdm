@@ -151,7 +151,7 @@ RotationShimController:
 
     # Robot
     max_vel_x: 0.8
-    max_vel_x_backwards: 0.25                
+    max_vel_x_backwards: 0.3                
     max_vel_theta: 0.6                       
     acc_lim_x: 0.101 #2.0                          
     acc_lim_theta: 0.101 #1.0                      
@@ -210,8 +210,8 @@ RotationShimController:
     weight_acc_lim_y: 0.0     
     weight_acc_lim_theta: 10.0 #1.0  
     weight_kinematics_nh: 3000.0   # 10000.0  
-    weight_kinematics_forward_drive: 1500.0
-    weight_kinematics_turning_radius: 1.0
+    weight_kinematics_forward_drive: 10000.0
+    weight_kinematics_turning_radius: 0.0
     weight_optimaltime: 10.0
     weight_shortest_path: 0.0   # Optimization weight for contracting the trajectory w.r.t. path length 
     weight_obstacle: 1000.0
@@ -227,7 +227,7 @@ RotationShimController:
     # enable_homotopy_class_planning: true    
     enable_multithreading: true              
     # simple_exploration: false               
-    max_number_classes: 4
+    max_number_classes: 2
     # max_number_plans_in_current_class:                
     selection_cost_hysteresis: 1.0 
     selection_prefer_initial_plan: 1.0
@@ -247,4 +247,5 @@ RotationShimController:
     # Recovery
     shrink_horizon_backup: true           
     oscillation_recovery: true
+    oscillation_v_eps: 0.25
     oscillation_recovery_min_duration: 10.0
