@@ -53,9 +53,11 @@ catkin_install_python(PROGRAMS
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(pattern_dock src/pattern_dock.cpp)
+add_dependencies(pattern_dock ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pattern_dock ${catkin_LIBRARIES})
 
 add_executable(pattern_special_dock src/pattern_special_dock.cpp)
+add_dependencies(pattern_special_dock ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pattern_special_dock ${catkin_LIBRARIES})
 
 # Mark other files for installation (e.g. launch and bag files, etc.)
