@@ -76,7 +76,7 @@
 
     <!-- IMU & IMU FILTER -->
     <include file="$(find amr_base)/launch/microstrain.launch">
-        <arg name="params_file" value="/home/amr/catkin_ws/src/amr/amr_base/config/imu_params.yml" />
+        <arg name="params_file" value="$(find amr_base)/config/imu_params.yml" />
     </include>
 
     <include file="$(find imu_filter_madgwick)/launch/imu_filter_madgwick.launch"/>
