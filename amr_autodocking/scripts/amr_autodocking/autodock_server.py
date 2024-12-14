@@ -454,7 +454,7 @@ class AutoDockServer:
                 result = self.back_line_extraction_client.call(signal)
 
             if result.success:
-                rospy.logwarn(result.message)
+                rospy.loginfo(result.message)
                 rospy.sleep(1.0)
                 return True
             else:
@@ -777,7 +777,7 @@ class AutoDockServer:
 
                 if abs(dx) < self.cfg.stop_trans_diff:
                     self.publish_velocity()
-                    rospy.logwarn("/autodock_controller: Done with move robot")
+                    rospy.loginfo("/autodock_controller: Done with move robot")
                     return True
 
                 # This makes sure that the robot is actually moving linearly
