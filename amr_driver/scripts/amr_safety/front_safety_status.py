@@ -9,27 +9,29 @@ from amr_msgs.msg import SafetyStatusStamped, SafetyStatus
 class FrontScannerSafety():
 
     def __init__(self):
-        # Params:
-        self.frame_id = rospy.get_param("~frame_id", "front_laser_link")
-
+        self.prev_obstacle_state_ = SafetyStatus.NORMAL
+        self.is_turn_off_ = False
+        self.is_running_  = False
+        
         # Publishers:
-        self.pub_front_scanner_status = rospy.Publisher("front_scanner_status", SafetyStatusStamped, queue_size=5)
-
-        # Variables:
-        self.prev_obstacle_state = SafetyStatus.NORMAL
-        self.is_turn_off_front_scanner = False
+        self.front_scanner_status_pub_ = rospy.Publisher("front_scanner_status", SafetyStatusStamped, queue_size=5)
 
         # Subscribers:
-        rospy.Subscriber("/sick_safetyscanners_front/output_paths", OutputPathsMsg, self.frontScannerStatusCb)
-        rospy.Subscriber("turn_off_front_safety", Bool, self.turnOffFrontSafetyScannerCb)
+        rospy.Subscriber("/sick_safetyscanners_front/output_paths", OutputPathsMsg, self.front_safety_state_callback)
+        rospy.Subscriber("turn_off_front_safety", Bool, self.turn_off_front_safety_callback)
+        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
 
+    def runonce_callback(self,msg: Bool):
+        self.is_running_ = msg.data
 
-    def turnOffFrontSafetyScannerCb(self, msg:Bool):
-        self.is_turn_off_front_scanner = msg.data
+    def turn_off_front_safety_callback(self, msg:Bool):
+        self.is_turn_off_ = msg.data
+        if msg.data:
+            rospy.loginfo("/front_safety_status: Turn off front safety scanner!")
 
-    def frontScannerStatusCb(self, msg: OutputPathsMsg):
+    def front_safety_state_callback(self, msg: OutputPathsMsg):
 
-        if self.is_turn_off_front_scanner:
+        if self.is_turn_off_ or not self.is_running_:
             return
         
         if not msg.status[0]:
@@ -41,13 +43,19 @@ class FrontScannerSafety():
         else:
             obstacle_state = SafetyStatus.NORMAL
 
-        if obstacle_state != self.prev_obstacle_state:
+        if obstacle_state != self.prev_obstacle_state_:
+            if obstacle_state == SafetyStatus.PROTECTED:
+                rospy.logwarn("/front_safety_status: Detect obstacle!")
+                
+            elif obstacle_state == SafetyStatus.NORMAL:
+                rospy.loginfo("/front_safety_status: No obstacle in field.")
+
             safety = SafetyStatusStamped()
-            safety.header.frame_id = self.frame_id
+            safety.header.frame_id = "front_laser_link"
             safety.header.stamp = rospy.Time.now()
             safety.safety_status.status = obstacle_state
-            self.pub_front_scanner_status.publish(safety)
-            self.prev_obstacle_state = obstacle_state
+            self.front_scanner_status_pub_.publish(safety)
+            self.prev_obstacle_state_ = obstacle_state
 
 
 if __name__== '__main__':

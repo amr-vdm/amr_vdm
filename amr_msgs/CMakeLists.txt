@@ -25,8 +25,8 @@ add_message_files(
     PID.msg
     PIDStamped.msg
     PoseInitial.msg
-    CheckerSensorState.msg
-    CheckerSensorStateStamped.msg
+    SliderSensor.msg
+    SliderSensorStamped.msg
     SafetyStatus.msg
     SafetyStatusStamped.msg
     SafetyZone.msg

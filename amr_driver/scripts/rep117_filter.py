@@ -11,7 +11,7 @@ class rep117_filter_laser():
         rospy.Subscriber('scan', LaserScan, self.callback)
 
 
-    def callback(self,msg):
+    def callback(self, msg:LaserScan):
         """
         Convert laser scans to REP 117 standard:
         http://www.ros.org/reps/rep-0117.html

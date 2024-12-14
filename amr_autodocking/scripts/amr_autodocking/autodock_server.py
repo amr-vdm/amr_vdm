@@ -31,7 +31,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, Int16, Empty
 from amr_autodocking.msg import AutoDockingAction
 from amr_autodocking.msg import AutoDockingGoal, AutoDockingResult
-from amr_msgs.msg import CheckerSensorStateStamped, DockLimit, DockMode, DockParam
+from amr_msgs.msg import SliderSensorStamped, DockLimit, DockMode, DockParam
 from tf.transformations import euler_from_quaternion
 from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
@@ -105,13 +105,13 @@ class AutoDockServer:
         # param check
         assert (
             len(self.cfg.linear_vel_range) == 2 and len(self.cfg.linear_vel_range) == 2
-        ), "linear and angular vel range should have size of 2"
+        ), "/autodock_controller: linear and angular vel range should have size of 2"
         assert (
             self.cfg.linear_vel_range[0] < self.cfg.linear_vel_range[1]
-        ), "linear vel min should be larger than max"
+        ), "/autodock_controller: linear vel min should be larger than max"
         assert (
             self.cfg.angular_vel_range[0] < self.cfg.angular_vel_range[1]
-        ), "linear vel min should be larger than max"
+        ), "/autodock_controller: linear vel min should be larger than max"
 
         # create_subscriber to tf broadcaster
         self.__tfBuffer = tf2_ros.Buffer(cache_time=rospy.Duration(5.0))
@@ -167,16 +167,16 @@ class AutoDockServer:
         self.back_apriltag_detector_cli_ = rospy.ServiceProxy(
             "/back_camera/apriltag_ros/enable_detector", SetBool
         )
-        rospy.loginfo("Connecting to /back_camera/apriltag_ros/enable_detector service...")
+        rospy.loginfo("/autodock_controller: Connecting to /back_camera/apriltag_ros/enable_detector service...")
         self.back_apriltag_detector_cli_.wait_for_service()
-        rospy.loginfo("Connected to /back_camera/apriltag_ros/enable_detector service.")
+        rospy.loginfo("/autodock_controller: Connected to /back_camera/apriltag_ros/enable_detector service.")
 
         self.front_apriltag_detector_cli_ = rospy.ServiceProxy(
             "/front_camera/apriltag_ros/enable_detector", SetBool
         )
-        rospy.loginfo("Connecting to /front_camera/apriltag_ros/enable_detector service...")
+        rospy.loginfo("/autodock_controller: Connecting to /front_camera/apriltag_ros/enable_detector service...")
         self.front_apriltag_detector_cli_.wait_for_service()
-        rospy.loginfo("Connected to /front_camera/apriltag_ros/enable_detector service.")
+        rospy.loginfo("/autodock_controller: Connected to /front_camera/apriltag_ros/enable_detector service.")
 
         # Create line extraction service
         self.front_line_extraction_client = rospy.ServiceProxy(
@@ -185,10 +185,10 @@ class AutoDockServer:
         self.back_line_extraction_client = rospy.ServiceProxy(
             "/back_line_extractor/enable_detector", SetBool
         )
-        rospy.loginfo("Connecting to front & back line extraction detector service...")
+        rospy.loginfo("/autodock_controller: Connecting to front & back line extraction detector service...")
         self.front_line_extraction_client.wait_for_service()
         self.back_line_extraction_client.wait_for_service()
-        rospy.loginfo("Connected to front & back line extraction detector service.")
+        rospy.loginfo("/autodock_controller: Connected to front & back line extraction detector service.")
 
         # Publishers
         self.cmd_vel_pub_ = rospy.Publisher(
@@ -214,8 +214,8 @@ class AutoDockServer:
         rospy.Subscriber("PAUSE_AMR", Bool, self.pause_callback)
         rospy.Subscriber("pickup_current_state", Bool, self.pickup_current_state_callback)
         rospy.Subscriber("drop_current_state", Bool, self.dropoff_current_state_callback)
-        rospy.Subscriber("cart_sensor_state", CheckerSensorStateStamped, self.cart_sensor_state_callback)
-        rospy.Subscriber("slider_sensor_state", CheckerSensorStateStamped, self.slider_sensor_state_callback)
+        rospy.Subscriber("cart_sensor_state", SliderSensorStamped, self.cart_sensor_state_callback)
+        rospy.Subscriber("slider_sensor_state", SliderSensorStamped, self.slider_sensor_state_callback)
         rospy.Subscriber("status_protected_field", Bool, self.protected_field_callback)
         rospy.Subscriber("back_scan_rep177", LaserScan, self.laser_scan_callback)
 
@@ -264,7 +264,7 @@ class AutoDockServer:
 
                 if (cart_tf is not None or dock_tf is None) and not self.is_waiting_dock_:
                     rospy.logwarn(
-                        "DROPOFF: Detect cart frame don't move out, will rotate and wait for hand control"
+                        "/autodock_controller: DROPOFF: Detect cart frame don't move out, will rotate and wait for hand control"
                     )
                     self.rotate_with_odom(-rotate_to_dock * math.pi / 180)
                     self.wait_dock_frame_pub_.publish(True)
@@ -274,7 +274,7 @@ class AutoDockServer:
                     try:
                         rospy.wait_for_message("/amr/hand_dock_trigger", Empty, timeout=1.0)
                         rospy.logwarn(
-                            "DROPOFF: Receive trigger continue DROPOFF, will continue docking"
+                            "/autodock_controller: DROPOFF: Receive trigger continue DROPOFF, will continue docking"
                         )
                         self.wait_dock_frame_pub_.publish(False)
                         self.rotate_with_odom(rotate_to_dock * math.pi / 180)
@@ -286,7 +286,7 @@ class AutoDockServer:
                 else:
                     return True
             else:
-                rospy.logerr("DROPOFF: timeout waiting for move cart reaches!!!!!")
+                rospy.logerr("/autodock_controller: DROPOFF: timeout waiting for move cart reaches!!!!!")
                 self.wait_dock_frame_pub_.publish(False)
                 self.is_waiting_dock_ = False
                 return False
@@ -353,7 +353,7 @@ class AutoDockServer:
         `rotate_orientation = 1`: Counter clockwise
         `rotate_orientation = 2`: Clockwise
         """
-        assert type(rotate_orientation) == int, "rotate_orientation is not int type!"
+        assert type(rotate_orientation) == int, "/autodock_controller: rotate_orientation is not int type!"
 
         dir = 1
         ori = 1
@@ -415,7 +415,7 @@ class AutoDockServer:
             dis_move = dir * abs(y_distance / math.sin(rot_angle))
 
             if self.cfg.debug_mode:
-                print(f"Rotate robot with {rot_angle}rad and move {dis_move}m.")
+                rospy.loginfo(f"/autodock_controller: Rotate robot with {rot_angle}rad and move {dis_move}m.")
 
             self.set_state(
                 DockState.CORRECTION,
@@ -440,7 +440,7 @@ class AutoDockServer:
             self.front_apriltag_detector_cli_.call(not signal)
             return True
         except rospy.ServiceException as e:
-            rospy.logerr("Service call failed: %s" % e)
+            rospy.logerr("/autodock_controller: Service call failed: %s" % e)
             return False
 
     def enable_line_detector(self, laser_name: str, signal: bool):
@@ -461,7 +461,7 @@ class AutoDockServer:
                 return False
 
         except rospy.ServiceException as e:
-            rospy.logerr("Service call failed: %s" % e)
+            rospy.logerr("/autodock_controller: Service call failed: %s" % e)
 
     def reset_all(self):
         """
@@ -487,7 +487,7 @@ class AutoDockServer:
         self.left_range_ = min(msg.ranges[80:100])
         self.right_range_ = min(msg.ranges[1171:1191])
 
-    def slider_sensor_state_callback(self, msg: CheckerSensorStateStamped):
+    def slider_sensor_state_callback(self, msg: SliderSensorStamped):
         self.slider_sensor_state_ = msg.sensor_state.data
 
     def protected_field_callback(self, msg: Bool):
@@ -496,7 +496,7 @@ class AutoDockServer:
     def pause_callback(self, msg: Bool):
         self.is_pause_ = msg.data
 
-    def cart_sensor_state_callback(self, msg: CheckerSensorStateStamped):
+    def cart_sensor_state_callback(self, msg: SliderSensorStamped):
         self.cart_sensor_state_ = msg.sensor_state.data
 
     def turn_off_back_scan_safety(self, signal):
@@ -520,7 +520,7 @@ class AutoDockServer:
         `signal = 2`: Slider go in
         """
         msg = "out" if signal == 1 else "in"
-        rospy.loginfo(f"Publishing slider motor go {msg}!")
+        rospy.loginfo(f"/autodock_controller: Publishing slider motor go {msg}!")
 
         self.cmd_slider_pub_.publish(signal)
 
@@ -546,7 +546,7 @@ class AutoDockServer:
         :return : if action succeeded
         """
         rospy.logwarn(
-            "Server implementation has not been specified. " "Do overload the start() function"
+            "/autodock_controller: Server implementation has not been specified. " "Do overload the start() function"
         )
         return False
 
@@ -560,10 +560,10 @@ class AutoDockServer:
         self.dock_state_ = state
 
         if state == DockState.ERROR:
-            rospy.logerr(f"State: [{state_str}] | {printout}!")
+            rospy.logerr(f"/autodock_controller: State: [{state_str}] | {printout}!")
 
         else:
-            rospy.loginfo(f"State: [{state_str}] | {printout}")
+            rospy.loginfo(f"/autodock_controller: State: [{state_str}] | {printout}")
 
         if self.run_server:
             self.feedback_msg.state = state
@@ -572,10 +572,10 @@ class AutoDockServer:
             self.autodock_action.publish_feedback(self.feedback_msg)
 
     def print_success(self, printout=""):
-        rospy.loginfo(f"State: [{DockState.to_string(self.dock_state_)}] | {printout}")
+        rospy.loginfo(f"/autodock_controller: State: [{DockState.to_string(self.dock_state_)}] | {printout}")
 
     def print_error(self, printout=""):
-        rospy.logerr(f"State: [{DockState.to_string(self.dock_state_)}] | {printout}")
+        rospy.logerr(f"/autodock_controller: State: [{DockState.to_string(self.dock_state_)}] | {printout}")
 
     def retry(self, dock_tf_name) -> bool:
         """
@@ -591,9 +591,9 @@ class AutoDockServer:
                 dock_tf = self.get_tf(dock_tf_name)
                 if dock_tf is None:
                     if counter > self.cfg.retry_count:
-                        rospy.logerr("Not dectect the dock frame after execute retry!")
+                        rospy.logerr("/autodock_controller: Not dectect the dock frame after execute retry!")
                         return False
-                    rospy.logwarn(f"Retrying again: {counter}/{self.cfg.retry_count}!")
+                    rospy.logwarn(f"/autodock_controller: Retrying again: {counter}/{self.cfg.retry_count}!")
                     counter += 1
                 else:
                     return True
@@ -607,7 +607,7 @@ class AutoDockServer:
         # check if dock_timeout reaches
         if not self.pause_flag_ and not self.is_waiting_dock_:
             if (rospy.Time.now() - self.start_time_).secs > self.dock_timeout_:
-                rospy.logwarn("Timeout reaches!")
+                rospy.logerr("/autodock_controller: Timeout reaches!")
                 self.set_state(self.dock_state_, "Reach Timeout")
                 return True
         return False
@@ -618,7 +618,7 @@ class AutoDockServer:
                 self.set_state(self.dock_state_, "Pause Requested!")
                 self.pause_flag_ = True
                 self.dock_timeout_ -= (rospy.Time.now() - self.start_time_).secs
-                rospy.loginfo(f"Timeout docking remain {self.dock_timeout_}s ")
+                rospy.loginfo(f"/autodock_controller: Timeout docking remain {self.dock_timeout_}s ")
 
         else:
             if self.pause_flag_:
@@ -669,7 +669,7 @@ class AutoDockServer:
             tf2_ros.ExtrapolationException,
         ):
             if print_out:
-                rospy.logwarn(f"Failed lookup: {target_link}, from {ref_link}")
+                rospy.logwarn(f"/autodock_controller: Failed lookup: {target_link}, from {ref_link}")
             return None
 
     def get_2D_pose(self, target_link=None, base_link=None):
@@ -695,7 +695,7 @@ class AutoDockServer:
             tf2_ros.ConnectivityException,
             tf2_ros.ExtrapolationException,
         ):
-            rospy.logerr(f"Failed lookup: {target_link}, from {base_link}")
+            rospy.logerr(f"/autodock_controller: Failed lookup: {target_link}, from {base_link}")
             return None
 
         x = trans.transform.translation.x
@@ -716,7 +716,7 @@ class AutoDockServer:
                 )
             )
         except rospy.exceptions.ROSException:
-            rospy.logerr(f"Failed to get odom")
+            rospy.logerr(f"/autodock_controller: Failed to get odom")
             return None
 
     def retry_with_high_current(self, forward, times=0, limit=None) -> bool:
@@ -727,7 +727,7 @@ class AutoDockServer:
         `limit`: If `times` > `limit` --> ERROR
         """
         if times == limit:
-            rospy.logerr(f"The times of high current exceed {limit}!")
+            rospy.logerr(f"/autodock_controller: The times of high current exceed {limit}!")
             self.error_pub_.publish(1)
             return False
 
@@ -739,7 +739,7 @@ class AutoDockServer:
         Move robot in linear motion with Odom. Blocking function
         :return : success
         """
-        self.set_state(self.dock_state_, f"move robot: {forward:.2f}m!")
+        self.set_state(self.dock_state_, f"Move robot: {forward:.2f}m!")
 
         _initial_tf = self.get_odom()
         if _initial_tf is None:
@@ -777,7 +777,7 @@ class AutoDockServer:
 
                 if abs(dx) < self.cfg.stop_trans_diff:
                     self.publish_velocity()
-                    rospy.logwarn("Done with move robot")
+                    rospy.logwarn("/autodock_controller: Done with move robot")
                     return True
 
                 # This makes sure that the robot is actually moving linearly
@@ -835,7 +835,7 @@ class AutoDockServer:
 
                 if abs(dyaw) < self.cfg.stop_yaw_diff:
                     self.publish_velocity()
-                    rospy.logwarn("Done with rotate robot")
+                    rospy.logwarn("/autodock_controller: Done with rotate robot")
                     return True
                 
                 sign = 1 if rotate > 0 else -1

@@ -3,238 +3,189 @@ import rospy
 import dynamic_reconfigure.client as dc
 
 from std_msgs.msg import Bool, Int16, Float32
-from amr_msgs.msg import CheckerSensorStateStamped, SafetyStatusStamped, SafetyStatus
+from amr_msgs.msg import SliderSensorStamped, SafetyStatusStamped, SafetyStatus
 
-NO_OBSTACLE = 0
-OBSTACLE = 1
+IN = 1
+OUT = 1
 
 class SafetyController():
 
     def __init__(self):
+        self.max_speed_ = rospy.get_param("~max_speed", 0.7)
+        self.speed_at_warninglv1 = rospy.get_param("~speed_at_warninglv1", 0.55)
+        self.speed_at_warninglv2 = rospy.get_param("~speed_at_warninglv2", 0.7)
 
-        # Get params from server
-        self.pub_frequency = rospy.get_param("~pub_frequency", 10)
-        self.max_speed = rospy.get_param("~max_speed", 0.7)
-        self.speed_after_protected_stop = rospy.get_param("~speed_after_protected_stop", 0.2)
-        self.speed_warning_zone_lv1 = rospy.get_param("~speed_warning_zone_lv1", 0.3)
-        self.speed_warning_zone_lv2 = rospy.get_param("~speed_warning_zone_lv2", 0.4)
-
-        self.rate = rospy.Rate(self.pub_frequency)
+        self.client_movebase_          = dc.Client("/move_base_node")
+        self.global_costmap_footprint_ = dc.Client("/move_base_node/global_costmap")
+        self.local_costmap_footprint_  = dc.Client("/move_base_node/local_costmap")
 
         # Move base dynamic reconfigure:
-        self.param_oscillation_timeout_obstacles = {'oscillation_timeout': 0.0}
-        self.param_oscillation_timeout_normal = {'oscillation_timeout': 15.0}
-
-        # DWB local planner dynamic reconfigure
-        # self.DWB_slow_speed_zone_vel_1 = {'max_speed_xy': 0.3,'max_vel_x': 0.3,'max_vel_theta': 0.3}
-
-        # TEB local planner dynamic reconfigure
-        # self.TEB_slow_speed_zone_vel_1 = {'max_vel_x': 0.3, 'max_vel_x_backwards': 0.15, 'max_vel_theta': 0.3}
+        self.timeout_obstacles_ = {'oscillation_timeout': 0.0}
+        self.timeout_normal_ = {'oscillation_timeout': 15.0}
 
         # Footprint dynamic reconfigure:
-        self.default_footprint = {'footprint': [[0.22,0.22],[-0.6,0.22],[-0.6,-0.22],[0.22,-0.22]]}
-        self.big_footprint = {'footprint': [[0.22,0.22],[-0.92,0.22],[-0.92,-0.22],[0.22,-0.22]]}
+        self.default_footprint_ = {'footprint': [[0.22,0.22],[-0.6,0.22],[-0.6,-0.22],[0.22,-0.22]]}
+        self.big_footprint_     = {'footprint': [[0.22,0.22],[-0.92,0.22],[-0.92,-0.22],[0.22,-0.22]]}
 
         # Inflation radius dynamic reconfigure
-        self.default_inflation_radius = {'inflation_radius': 0.65}
-        self.big_inflation_radius = {'inflation_radius': 0.955}
+        self.default_inflation_radius_ = {'inflation_radius': 0.65}
+        self.big_inflation_radius_     = {'inflation_radius': 0.955}
 
         # Avariables:
-        self.state_runonceNAV = False
-        self.Pause_AMR_state = False
-        self.is_turn_off_back = False
-        self.is_turn_off_front = False
-        self.is_turn_off_ultrasonic = False
-        self.is_turn_off_front_depth_scan = False
-        self.status_field_back = SafetyStatus.NORMAL
-        self.status_field_front = SafetyStatus.NORMAL
-        self.front_depth_scan_status = SafetyStatus.NORMAL
-        self.ultrasonic_safety_status = SafetyStatus.NORMAL
-        self.status_field = SafetyStatus.NORMAL
-        self.footprint = 0
+        self.loop_freq_ = 10.0
+        self.is_running_ = False
+        self.is_pause_ = False
+        self.is_turn_off_back_ = False
+        self.is_turn_off_front_ = False
+        self.is_turn_off_ultrasonic_ = False
+        self.is_turn_off_front_depth_scan_ = False
+        self.back_scanner_state_  = SafetyStatus.NORMAL
+        self.front_scanner_state_ = SafetyStatus.NORMAL
+        self.front_depth_scan_state_  = SafetyStatus.NORMAL
+        self.ultrasonic_safety_state_ = SafetyStatus.NORMAL
+        self.field_state_      = SafetyStatus.NORMAL
+        self.prev_field_state_ = SafetyStatus.NORMAL
         
         # Publishers:
-        self.pub_status_protected_field = rospy.Publisher("status_protected_field", Bool, queue_size=5)
-        self.pub_speed_limit_safety = rospy.Publisher("/speed_limit_safety", Float32, queue_size=5)
+        self.protected_field_status_pub_ = rospy.Publisher("status_protected_field", Bool, queue_size=5)
+        self.speed_at_field_pub_         = rospy.Publisher("/speed_at_field", Float32, queue_size=5)
 
         # Subscribers:
-        rospy.Subscriber("front_scanner_status", SafetyStatusStamped, self.frontFieldStatusCb)
-        rospy.Subscriber("back_scanner_status", SafetyStatusStamped, self.backFieldStatusCb)
-        rospy.Subscriber("front_depth_scanner_status", SafetyStatusStamped, self.frontDepthScanStatusCb)
-        rospy.Subscriber("ultrasonic_safety_status", SafetyStatusStamped, self.ultrasonicSafetyCb)
-        rospy.Subscriber("state_runonce_nav", Bool, self.runOnceStateCb)
-        rospy.Subscriber('PAUSE_AMR', Bool, self.pauseAMRCb)
-        rospy.Subscriber("turn_off_back_safety",Bool,self.turnOffBackSafetyScannerCb)
-        rospy.Subscriber("turn_off_front_safety", Bool, self.turnOffFrontSafetyScannerCB)
-        rospy.Subscriber("turn_off_ultrasonic_safety", Bool, self.turnOffUltrasonicSafetyCB)
-        rospy.Subscriber("turn_off_front_depth_safety", Bool, self.turnOffFrontDepthScanCb)
-        rospy.Subscriber("slider_sensor_state", CheckerSensorStateStamped, self.switchFootprintCb)
+        rospy.Subscriber("front_scanner_status", SafetyStatusStamped, self.front_scanner_state_callback)
+        rospy.Subscriber("back_scanner_status", SafetyStatusStamped, self.back_scanner_state_callback)
+        rospy.Subscriber("front_depth_scanner_status", SafetyStatusStamped, self.front_depth_scanner_state_callback)
+        rospy.Subscriber("ultrasonic_safety_status", SafetyStatusStamped, self.ultrasonic_state_callback)
+        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
+        rospy.Subscriber('PAUSE_AMR', Bool, self.pause_callback)
+        rospy.Subscriber("turn_off_back_safety",Bool,self.turn_off_back_safety_callback)
+        rospy.Subscriber("turn_off_front_safety", Bool, self.turn_off_front_safety_callback)
+        rospy.Subscriber("turn_off_ultrasonic_safety", Bool, self.turn_off_ultrasonic_safety_callback)
+        rospy.Subscriber("turn_off_front_depth_safety", Bool, self.turn_off_front_depth_scan_safety_callback)
+        rospy.Subscriber("slider_sensor_state", SliderSensorStamped, self.switch_footprint_callback)
 
     
-    def switchFootprintCb(self, msg:CheckerSensorStateStamped):
-
-        global_footprint_client = dc.Client("/move_base_node/global_costmap")
-        local_footprint_client = dc.Client("/move_base_node/local_costmap")
-        global_ir_client = dc.Client("/move_base_node/global_costmap/inflation")
-        local_ir_client = dc.Client("/move_base_node/local_costmap/inflation")
-
+    def switch_footprint_callback(self, msg:SliderSensorStamped):
         if msg.sensor_state.data:
-            if msg.sensor_state.data[0] == 1:
-                self.footprint = 1
-            elif msg.sensor_state.data[1] == 1:
-                self.footprint = 2
-            else:
-                return
+            if msg.sensor_state.data[0] == IN:
+                self.global_costmap_footprint_.update_configuration(self.default_footprint_)
+                self.local_costmap_footprint_.update_configuration(self.default_footprint_)
 
-        if self.footprint == 1:
-            global_footprint_client.update_configuration(self.default_footprint)
-            # global_ir_client.update_configuration(self.default_inflation_radius)
-            local_footprint_client.update_configuration(self.default_footprint)
-            # local_ir_client.update_configuration(self.default_inflation_radius)
-        else:
-            global_footprint_client.update_configuration(self.big_footprint)
-            # global_ir_client.update_configuration(self.big_inflation_radius)
-            local_footprint_client.update_configuration(self.big_footprint)
-            # local_ir_client.update_configuration(self.big_inflation_radius)
-            
+            elif msg.sensor_state.data[1] == OUT:
+                self.global_costmap_footprint_.update_configuration(self.big_footprint_)
+                self.local_costmap_footprint_.update_configuration(self.big_footprint_) 
 
-    def runOnceStateCb(self,msg: Bool):
-        self.state_runonceNAV = msg.data
-        if not self.state_runonceNAV:
-            self.pub_status_protected_field.publish(False)
+    def runonce_callback(self,msg: Bool):
+        self.is_running_ = msg.data
+        if not self.is_running_:
+            self.protected_field_status_pub_.publish(False)
 
+    def pause_callback(self,msg: Bool):
+        self.is_pause_ = msg.data
+        if self.is_pause_:
+            self.protected_field_status_pub_.publish(False)
 
-    def pauseAMRCb(self,msg: Bool):
-        self.Pause_AMR_state = msg.data
-        if self.Pause_AMR_state:
-            self.pub_status_protected_field.publish(False)
-
-
-    def turnOffBackSafetyScannerCb(self,msg: Bool):
-        self.is_turn_off_back = msg.data
+    def turn_off_back_safety_callback(self,msg: Bool):
+        self.is_turn_off_back_ = msg.data
         if msg.data:
-            self.status_field_back = SafetyStatus.NORMAL
+            self.back_scanner_state_ = SafetyStatus.NORMAL
 
-    def turnOffFrontSafetyScannerCB(self, msg:Bool):
-        self.is_turn_off_front = msg.data
+    def turn_off_front_safety_callback(self, msg:Bool):
+        self.is_turn_off_front_ = msg.data
         if msg.data:
-            self.status_field_front = SafetyStatus.NORMAL
+            self.front_scanner_state_ = SafetyStatus.NORMAL
 
-    def turnOffFrontDepthScanCb(self, msg:Bool):
-        self.is_turn_off_front_depth_scan = msg.data
+    def turn_off_front_depth_scan_safety_callback(self, msg:Bool):
+        self.is_turn_off_front_depth_scan_ = msg.data
         if msg.data:
-            self.front_depth_scan_status = SafetyStatus.NORMAL
+            self.front_depth_scan_state_ = SafetyStatus.NORMAL
 
-
-    def turnOffUltrasonicSafetyCB(self, msg:Bool):
-        self.is_turn_off_ultrasonic = msg.data
+    def turn_off_ultrasonic_safety_callback(self, msg:Bool):
+        self.is_turn_off_ultrasonic_ = msg.data
         if msg.data:
-            self.ultrasonic_safety_status = SafetyStatus.NORMAL
+            self.ultrasonic_safety_state_ = SafetyStatus.NORMAL
 
-    def configureOscillationTimeOut(self,config):
-        if self.Pause_AMR_state:
+    def configure_timeout(self,config):
+        if self.is_pause_:
             return
-        self.client_movebase = dc.Client("/move_base_node")
-        self.client_movebase.update_configuration(config)
+        self.client_movebase_.update_configuration(config)
 
-    def backFieldStatusCb(self,msg: SafetyStatusStamped):
-        if self.is_turn_off_back:
+    def back_scanner_state_callback(self,msg: SafetyStatusStamped):
+        if self.is_turn_off_back_:
             return
-        self.status_field_back = msg.safety_status.status
+        self.back_scanner_state_ = msg.safety_status.status
 
-    def frontFieldStatusCb(self,msg: SafetyStatusStamped):
-        if self.is_turn_off_front:
+    def front_scanner_state_callback(self,msg: SafetyStatusStamped):
+        if self.is_turn_off_front_:
             return
-        self.status_field_front = msg.safety_status.status
+        self.front_scanner_state_ = msg.safety_status.status
 
-    def frontDepthScanStatusCb(self, msg: SafetyStatusStamped):
-        if self.is_turn_off_front_depth_scan:
+    def front_depth_scanner_state_callback(self, msg: SafetyStatusStamped):
+        if self.is_turn_off_front_depth_scan_:
             return
-        self.front_depth_scan_status = msg.safety_status.status
+        self.front_depth_scan_state_ = msg.safety_status.status
     
-    def ultrasonicSafetyCb(self, msg:SafetyStatusStamped):
-        if self.is_turn_off_ultrasonic:
+    def ultrasonic_state_callback(self, msg:SafetyStatusStamped):
+        if self.is_turn_off_ultrasonic_:
             return
-        self.ultrasonic_safety_status = msg.safety_status.status
+        self.ultrasonic_safety_state_ = msg.safety_status.status
 
+    def update_velocity(self, field):
+        if field == SafetyStatus.WARNING_LV1:
+            speed_limit = self.speed_at_warninglv1  # m/s
+        elif field == SafetyStatus.WARNING_LV2:
+            speed_limit = self.speed_at_warninglv2  # m/s
+        elif field == SafetyStatus.NORMAL:
+            speed_limit = self.max_speed_           # m/s
 
-    def AMRFieldStatus(self):
-        pulse_2s = 0
+        msg = Float32()
+        msg.data = speed_limit
+        self.speed_at_field_pub_.publish(msg)
+
+    def run(self):
+        delay_time = 0.0
         while not rospy.is_shutdown():
-            if (not self.state_runonceNAV
-                or self.Pause_AMR_state):
-                if self.status_field != SafetyStatus.NORMAL:
-                    self.status_field = SafetyStatus.NORMAL
-                    self.pub_speed_limit_safety.publish(self.max_speed)
-                    self.pub_status_protected_field.publish(False)
-            # elif self.Pause_AMR_state:
-            #     if self.status_field != SafetyStatus.NORMAL:
-            #         self.status_field = SafetyStatus.NORMAL
-            #         self.pub_speed_limit_safety.publish(self.max_speed)
+            if not self.is_running_ or self.is_pause_:
+                self.field_state_ = SafetyStatus.NORMAL
             else:
-                if (self.status_field_front == SafetyStatus.PROTECTED
-                    or self.status_field_back == SafetyStatus.PROTECTED
-                    or self.ultrasonic_safety_status == SafetyStatus.PROTECTED
-                    or self.front_depth_scan_status == SafetyStatus.PROTECTED):
-                    pulse_2s = 0
-                    if self.status_field != SafetyStatus.PROTECTED:
-                        rospy.logwarn(f"{rospy.get_name()}: have obstacle in protected zone, robot stop!")
-                        self.pub_status_protected_field.publish(True)
-                        self.configureOscillationTimeOut(self.param_oscillation_timeout_obstacles)
-                        self.status_field = SafetyStatus.PROTECTED
+                if (self.front_scanner_state_ == SafetyStatus.PROTECTED
+                    or self.back_scanner_state_ == SafetyStatus.PROTECTED
+                    or self.ultrasonic_safety_state_ == SafetyStatus.PROTECTED
+                    or self.front_depth_scan_state_ == SafetyStatus.PROTECTED):
+                    
+                    self.field_state_ = SafetyStatus.PROTECTED
+                    delay_time = 0.0
+
+                    if self.field_state_ != self.prev_field_state_:
+                        self.protected_field_status_pub_.publish(True)
+                        self.configure_timeout(self.timeout_obstacles_)
                 else:
-                    if (self.status_field == SafetyStatus.PROTECTED):
-                        if pulse_2s == 20 :
-                            rospy.logwarn(f"{rospy.get_name()}: no obstacle in protected zone,robot will run after 2s!")
-                            self.pub_status_protected_field.publish(False)
-                            self.configureOscillationTimeOut(self.param_oscillation_timeout_normal)
-                            self.pub_speed_limit_safety.publish(self.speed_after_protected_stop)
-                            self.status_field = SafetyStatus.WARNING_LV1
-                            pulse_2s = 0
+                    if (self.field_state_ == SafetyStatus.PROTECTED):
+                        if delay_time >= 2.0:
+                            self.protected_field_status_pub_.publish(False)
+                            self.field_state_ = SafetyStatus.NORMAL
+                            delay_time = 0.0
                         else: 
-                            pulse_2s += 1
-                
-                    elif (self.status_field_front == SafetyStatus.WARNING_LV1
-                          or self.status_field_back == SafetyStatus.WARNING_LV1):
-                        pulse_2s = 0
-                        if self.status_field != SafetyStatus.WARNING_LV1:
-                            rospy.logwarn(f"{rospy.get_name()}: obstacle in warning zone LV1, " 
-                                          f"robot will reduce speed ({self.speed_warning_zone_lv1}m/s)!")
-                            # self.pub_status_protected_field.publish(False)
-                            self.configureOscillationTimeOut(self.param_oscillation_timeout_normal)
-                            self.pub_speed_limit_safety.publish(self.speed_warning_zone_lv1)
-                            # self.configureVelocity(self.TEB_slow_speed_zone_vel_1)
-                            self.status_field = SafetyStatus.WARNING_LV1
-
-                    elif (self.status_field_front == SafetyStatus.WARNING_LV2
-                          or self.status_field_back == SafetyStatus.WARNING_LV2):
-                        pulse_2s = 0
-                        if self.status_field != SafetyStatus.WARNING_LV2:
-                            rospy.logwarn(f"{rospy.get_name()}: obstacle in warning zone LV2 " 
-                                          f"robot will reduce speed ({self.speed_warning_zone_lv2}m/s)!")
-                            # self.pub_status_protected_field.publish(False)
-                            self.configureOscillationTimeOut(self.param_oscillation_timeout_normal)
-                            self.pub_speed_limit_safety.publish(self.speed_warning_zone_lv2)
-                            # self.configureVelocity(self.TEB_slow_speed_zone_vel_2)
-                            self.status_field = SafetyStatus.WARNING_LV2
-                        
-                    elif self.status_field != SafetyStatus.NORMAL:
-                        if pulse_2s == 10:
-                            rospy.logwarn(f"{rospy.get_name()}: no obstacle, robot will run with max speed!")
-                            # self.pub_status_protected_field.publish(False)
-                            self.configureOscillationTimeOut(self.param_oscillation_timeout_normal)
-                            self.pub_speed_limit_safety.publish(self.max_speed)
-                            self.status_field = SafetyStatus.NORMAL
-                        else: pulse_2s += 1
-            self.rate.sleep()    
-
+                            delay_time += 1/self.loop_freq_
+                    
+                    if (self.front_scanner_state_ != SafetyStatus.PROTECTED
+                        and self.field_state_ != SafetyStatus.PROTECTED):
+                        self.field_state_ = self.front_scanner_state_
+                    
+                    if (self.field_state_ != self.prev_field_state_):
+                        delay_time = 0.0
+                        self.configure_timeout(self.timeout_normal_)
+                        self.update_velocity(self.front_scanner_state_)
+                    
+                self.prev_field_state_ = self.field_state_
+            
+            rospy.sleep(1/self.loop_freq_)
 
 if __name__== '__main__':
     rospy.init_node("safety_controller")
     try:
         safety_controller = SafetyController()
         rospy.loginfo("%s node is running!", rospy.get_name())
-        safety_controller.AMRFieldStatus()
+        safety_controller.run()
         
     except rospy.ROSInterruptException:
         pass

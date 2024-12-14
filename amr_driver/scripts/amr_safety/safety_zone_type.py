@@ -9,57 +9,44 @@ from amr_msgs.msg import SafetyZone
 class SafetyZoneType():
 
     def __init__(self):
-
-        # Get params from server
-        self.pub_frequency = rospy.get_param("~pub_frequency", 5)
-
-        self.rate = rospy.Rate(self.pub_frequency)
-
-        # Listen to Transfromation
-        self.__tfBuffer = tf2_ros.Buffer(cache_time=rospy.Duration(5.0))
-        self.__tf_listener = tf2_ros.TransformListener(self.__tfBuffer)
-
-        # Variables:
-        self.is_run_once = False
-        self.turn_off_front_dept_safety = False
+        self.is_running_ = False
+        self.turn_off_front_depth_safety_ = False
 
         # Publishers:
-        self._pub_safety_zone_type = rospy.Publisher("safety_zone_type", SafetyZone, queue_size=5)
-        self._pub_turn_off_front_depth_scan = rospy.Publisher("turn_off_front_depth_safety", Bool, queue_size=5)
+        self.safety_zone_type_pub_ = rospy.Publisher("safety_zone_type", SafetyZone, queue_size=5)
+        self.turn_off_front_depth_scan_pub_ = rospy.Publisher("turn_off_front_depth_safety", Bool, queue_size=5)
 
         # Subscribers:
-        rospy.Subscriber("state_runonce_nav", Bool, self.runOnceStateCb)
+        rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
         rospy.Subscriber("/safety_filter/safety_state", Bool, self.safety_state_callback)
         rospy.Subscriber("turn_off_front_depth_autodock", Bool, self.turn_off_fd_autodock_cb)
-
     
-    def runOnceStateCb(self, msg:Bool):
-        self.is_run_once = msg.data
+    def runonce_callback(self, msg:Bool):
+        self.is_running_ = msg.data
 
-
-    def pubSafetyZoneType(self, type):
+    def publish_zone_type(self, type):
         msg = SafetyZone()
         msg.zone = type
-        self._pub_safety_zone_type.publish(msg)
+        self.safety_zone_type_pub_.publish(msg)
 
     def turn_off_fd_autodock_cb(self, msg: Bool):
-        if not self.turn_off_front_dept_safety:
-            self._pub_turn_off_front_depth_scan.publish(msg.data)
-
+        if not self.turn_off_front_depth_safety_:
+            self.turn_off_front_depth_scan_pub_.publish(msg.data)
 
     def safety_state_callback(self, msg: Bool):
-        self.turn_off_front_dept_safety = msg.data
+        self.turn_off_front_depth_safety_ = msg.data
 
-        # if not self.is_run_once:
+        # if not self.is_running_:
         #     return
 
         if msg.data:
-            self.pubSafetyZoneType(SafetyZone.SMALL_ZONE)
-            self._pub_turn_off_front_depth_scan.publish(True)
+            self.publish_zone_type(SafetyZone.SMALL_ZONE)
+            self.turn_off_front_depth_scan_pub_.publish(True)
+            rospy.loginfo("/safety_zone_type: Published small zone!")
         else:
-            self.pubSafetyZoneType(SafetyZone.BIG_ZONE)
-            self._pub_turn_off_front_depth_scan.publish(False)
-
+            self.publish_zone_type(SafetyZone.BIG_ZONE)
+            self.turn_off_front_depth_scan_pub_.publish(False)
+            rospy.loginfo("/safety_zone_type: Published big zone!")
 
 if __name__== '__main__':
     rospy.init_node("safety_zone_type")

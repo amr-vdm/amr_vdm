@@ -39,23 +39,23 @@ class MapContext():
         pose_list_tmp = config.get("pose_list", None)
 
         if self._floor_id == None:
-            print("Error: <floor_id> is not specified!")
+            rospy.logerr("/change_map: <floor_id> is not specified!")
             return False
 
         if self._floor_name == None:
-            print("Error: <floor_name> is not specified!")
+            rospy.logerr("/change_map: <floor_name> is not specified!")
             return False
         
         if self._map_name == None:
-            print("Error: <map_name> is not specified!")
+            rospy.logerr("/change_map: <map_name> is not specified!")
             return False
         
         if self._path == None:
-            print("Error: <path> is not specified!")
+            rospy.logerr("/change_map: <path> is not specified!")
             return False
 
         if type(pose_list_tmp) is not ruamel.yaml.comments.CommentedSeq:
-            print("Error: <pose_list> is not a list")
+            rospy.logerr("/change_map: <pose_list> is not a list")
             return False
 
         self._pose_list = []
@@ -72,7 +72,7 @@ class MapContext():
             self._pose_list.append(PoseInfo(pose))
         
         if len(self._pose_list) > 8:
-            print("Error: Pose_initial_hand supports no more than 8 positions of floor")
+            rospy.logerr("/change_map: Pose_initial_hand supports no more than 8 positions of floor")
             return False
 
         self._map_path = os.path.join(self._path, self._map_name, "edited", "map.yaml")
@@ -90,42 +90,38 @@ class ChangeMapServer():
         self.map_frame          = rospy.get_param("~map_frame", "map")
         self.robot_frame        = rospy.get_param("~robot_frame", "base_footprint")
         self.debug              = rospy.get_param("~debug", False)
-        # self.update_frequency   = rospy.get_param("~update_frequency", 10.0)
         self.map_config_path = rospy.get_param("~map_config_path", "")
-
-        # Listen to Transfromation
-        # self.rate = rospy.Rate(self.update_frequency)
 
         # Service:
         # Change map service
         self.change_map_client = rospy.ServiceProxy("/change_map", LoadMap)
-        self.loginfo("Connecting to change map service...")
+        self.loginfo("/change_map: Connecting to change map service...")
         self.change_map_client.wait_for_service()
-        self.loginfo("Connected to change map service.")
+        self.loginfo("/change_map: Connected to change map service.")
 
         # Change virtual wall map
         self.change_virtual_wall_map_client = rospy.ServiceProxy("/virtual_walls/change_map", LoadMap)
-        self.loginfo("Connecting to /virtual_walls/change_map service...")
+        self.loginfo("/change_map: Connecting to /virtual_walls/change_map service...")
         self.change_virtual_wall_map_client.wait_for_service()
-        self.loginfo("Connected to /virtual_walls/change_map service.")
+        self.loginfo("/change_map: Connected to /virtual_walls/change_map service.")
 
         # Change obstacle map
         self.change_obtascle_map_client = rospy.ServiceProxy("/obstacle_filter/change_map", LoadMap)
-        self.loginfo("Connecting to /obstacle_filter/change_map service...")
+        self.loginfo("/change_map: Connecting to /obstacle_filter/change_map service...")
         self.change_obtascle_map_client.wait_for_service()
-        self.loginfo("Connected to /obstacle_filter/change_map service.")
+        self.loginfo("/change_map: Connected to /obstacle_filter/change_map service.")
 
         # Change safety filter map
         self.change_safety_filter_map_client = rospy.ServiceProxy("/safety_filter/change_map", LoadMap)
-        self.loginfo("Connecting to /safety_filter/change_map service...")
+        self.loginfo("/change_map: Connecting to /safety_filter/change_map service...")
         self.change_safety_filter_map_client.wait_for_service()
-        self.loginfo("Connected to /safety_filter/change_map service.")
+        self.loginfo("/change_map: Connected to /safety_filter/change_map service.")
 
         # Clear costmap service
         self.clear_all_costmap = rospy.ServiceProxy("/move_base_node/clear_costmaps", Empty)
-        self.loginfo("Connecting to /move_base_node/clear_costmaps service...")
+        self.loginfo("/change_map: Connecting to /move_base_node/clear_costmaps service...")
         self.clear_all_costmap.wait_for_service()
-        self.loginfo("Connected to /move_base_node/clear_costmaps service.")
+        self.loginfo("/change_map: Connected to /move_base_node/clear_costmaps service.")
 
         # Change floor service server:
         self.change_floor_server = rospy.Service("change_floor", ChangeFloor, self.change_floor_callback)
@@ -178,7 +174,7 @@ class ChangeMapServer():
 
             fl_context = self._floor_context_dict.get(floor_name, None)
             if fl_context is None:
-                rospy.logerr("Not found floor_name in config!")
+                rospy.logerr("/change_map: Not found floor_name in config!")
                 return resp
             
             if not self.change_map(map_file=fl_context._map_path,
@@ -204,12 +200,12 @@ class ChangeMapServer():
             fl_context = self._floor_context_dict.get(fl)
             if fl_context._floor_id == floor_id:
                 if msg.pose_id > len(fl_context._pose_list):
-                    self.logwarn(f"Floor:{fl_context._floor_name} - Pose_ID: {msg.pose_id} is not configure, will not set initial position!")
+                    self.logwarn(f"/change_map: Floor:{fl_context._floor_name} - Pose_ID: {msg.pose_id} is not configure, will not set initial position!")
                     self.pub_is_initial_pose.publish(False)
                     return
                 
                 pose = fl_context._pose_list[msg.pose_id - 1]
-                self.loginfo(f"Set initial_position:\n"
+                self.loginfo(f"/change_map: Set initial_position:\n"
                              f"   floor_name: {fl_context._floor_name}\n"
                              f"   pose_id: {msg.pose_id}")
                 
@@ -237,7 +233,7 @@ class ChangeMapServer():
                     
                 self.pub_is_initial_pose.publish(True)
                 return
-        self.logwarn(f"not found floor_id-{msg.floor_id} in config!")
+        self.logwarn(f"/change_map: not found floor_id-{msg.floor_id} in config!")
         return
 
     def change_map(self, map_file, virtual_wall_map_file, obstacle_map_file, safety_filter_map_file):
@@ -245,7 +241,7 @@ class ChangeMapServer():
         Change map service
         """
         try:
-            self.loginfo("Waiting result from change_map server...")
+            self.loginfo("/change_map: Waiting result from change_map server...")
             resp = self.change_map_client.call(map_file)
             resp1 = self.change_virtual_wall_map_client.call(virtual_wall_map_file)
             resp2 = self.change_obtascle_map_client.call(obstacle_map_file)
@@ -260,15 +256,15 @@ class ChangeMapServer():
                 and status1 != LoadMapResponse.RESULT_SUCCESS
                 and status2 != LoadMapResponse.RESULT_SUCCESS
                 and status3 != LoadMapResponse.RESULT_SUCCESS):
-                rospy.logerr('Change map failed!')
+                rospy.logerr('/change_map: Change map failed!')
                 return False
             else:
-                self.loginfo('Change map successful!')
+                self.loginfo('/change_map: Change map successful!')
                 return True
             
 
         except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
+            rospy.logerr(f"/change_map: Service call failed: {e}")
             self.shutdownCostMap(enable=True)
 
     def clearCostmap(self):
@@ -276,11 +272,11 @@ class ChangeMapServer():
         Clear all costmaps
         """
         try:
-            self.loginfo("Requesting clear all costmaps...")
+            self.loginfo("/change_map: Requesting clear all costmaps...")
             self.clear_all_costmap.call()
         
         except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
+            rospy.logerr(f"/change_map: Service call failed: {e}")
 
     def loginfo(self, msg: str):
         msg_out = rospy.get_name() + ': ' + msg
@@ -295,7 +291,7 @@ if __name__== '__main__':
     rospy.init_node('amr_change_map')
     try:
         change_map_server = ChangeMapServer()
-        change_map_server.loginfo("ChangeMap server node is running!")
+        change_map_server.loginfo("/change_map node is running!")
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

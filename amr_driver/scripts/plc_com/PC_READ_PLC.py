@@ -4,13 +4,8 @@ import time
 import rospy
 from std_msgs.msg import Bool, Int16, Int16MultiArray, Empty
 from sensor_msgs.msg import Range, BatteryState
-from amr_msgs.msg import CheckerSensorStateStamped, PoseInitial
+from amr_msgs.msg import SliderSensorStamped, PoseInitial
 from amr_driver.mcprotocol.type1e import Type1E
-
-
-INFO  = rospy.loginfo
-WARN  = rospy.logwarn
-ERROR = rospy.logerr
 
 class Parameter():
     PLC_port = 8001
@@ -37,9 +32,9 @@ class PCReadPLC(Type1E):
         # Connect to PLC
         self.connect_PLC(self.params.PLC_IP_address, self.params.PLC_port)
         if self._is_connected:
-            INFO("PC_controller(READ): is connected to PLC success")
+            rospy.loginfo("/PC_READ_PLC: Connected to PLC.")
         else:
-            ERROR("PC_controller(READ): can't connect to PLC")
+            rospy.logerr("/PC_READ_PLC: Can't connect to PLC! Please check IP address or Port again!")
 
         # Only Publishers:
         self.pub_left_ultrasonic      = rospy.Publisher("left_ultrasonic/range", Range, queue_size=5)
@@ -51,8 +46,8 @@ class PCReadPLC(Type1E):
         self.pub_hand_control         = rospy.Publisher("HAND_CONTROL_AMR", Bool, queue_size=5)
         self.pub_EMS                  = rospy.Publisher("emergency_stop", Bool, queue_size=5)
         self.pub_initialpose          = rospy.Publisher("pose_initial_hand", PoseInitial, queue_size=1)
-        self.pub_cart_sensor          = rospy.Publisher("cart_sensor_state", CheckerSensorStateStamped, queue_size=5)
-        self.pub_max_slider           = rospy.Publisher("slider_sensor_state", CheckerSensorStateStamped, queue_size=5)
+        self.pub_cart_sensor          = rospy.Publisher("cart_sensor_state", SliderSensorStamped, queue_size=5)
+        self.pub_max_slider           = rospy.Publisher("slider_sensor_state", SliderSensorStamped, queue_size=5)
         self.pub_pickup_current_state = rospy.Publisher("pickup_current_state", Bool, queue_size=1)
         self.pub_drop_current_state   = rospy.Publisher("drop_current_state", Bool, queue_size=1)
         self.pub_battery_state        = rospy.Publisher("/battery_state", BatteryState, queue_size=5)
@@ -77,12 +72,12 @@ class PCReadPLC(Type1E):
         self.wait_dock_state = 0
         self.cart_sensor_state = [0,0]
         self.slider_sensor_state = [0,0]
-        self.sensor_state_array = CheckerSensorStateStamped()
+        self.sensor_state_array = SliderSensorStamped()
 
         self.isPubWaitDockBit = False
 
     def initParams(self):
-        print("PC_READ_PLC params:")
+        print("/PC_READ_PLC: Parameters:")
 
         param_names = [attr for attr in dir(self.params) if not callable(getattr(self.params, attr)) and not attr.startswith("__")]
 
@@ -210,13 +205,13 @@ class PCReadPLC(Type1E):
             # bit_array[0] - M400: EMS bit
             if (bit_array[0] != self.Emergency_STOP_state):
                 if bit_array[0]:
-                    ERROR("Emergency Stop State: ON")
+                    rospy.logerr("/PC_READ_PLC: EMS is ON!")
                     self.pub_stop_amr.publish(True)
                     self.pub_EMS.publish(True)
                     self.Emergency_STOP_state = 1
 
                 else:
-                    INFO("Emergency Stop State: OFF")
+                    rospy.loginfo("/PC_READ_PLC: EMS is OFF.")
                     self.pub_stop_amr.publish(False)
                     self.pub_EMS.publish(False)
                     self.Emergency_STOP_state = 0
@@ -226,7 +221,7 @@ class PCReadPLC(Type1E):
                     # bit_array[2] - M402: pause bit
                     if bit_array[2] != self.Pause_AMR_state:
                         if bit_array[2]:
-                            WARN("Pause State: ON")
+                            rospy.loginfo("/PC_READ_PLC: Pause is ON.")
                             self.pub_cmd_pause_AMR.publish(True)
                             self.pub_stop_amr.publish(True)
                             self.Pause_AMR_state = 1
@@ -235,7 +230,7 @@ class PCReadPLC(Type1E):
                             self.pause_timer += (1 / self.params.pub_frequency)
                             
                         else:
-                            INFO("Pause State: OFF")
+                            rospy.loginfo("/PC_READ_PLC: Pause is OFF.")
                             self.pub_cmd_pause_AMR.publish(False)
                             self.pub_stop_amr.publish(False)
                             self.Pause_AMR_state = 0
@@ -244,7 +239,7 @@ class PCReadPLC(Type1E):
 
                     # bit_array[3] - M403: cancel bit
                     if bit_array[3]:
-                        INFO("Cancel Bit State: ON")
+                        rospy.loginfo("/PC_READ_PLC: Pressed cancel.")
                         self.pub_cmd_cancel_AMR.publish(True)
 
                     # bit_array[4] - M404: high pickup current bit
@@ -308,7 +303,7 @@ class PCReadPLC(Type1E):
                 if bit_array[13]:
                     msg = Empty()
                     self.pub_cmd_reset_AMR.publish(msg)
-                    INFO("PLC reset AMR!")
+                    rospy.loginfo("/PC_READ_PLC: Reset AMR.")
                 self.RESET_AMR_state = bit_array[13]
 
             # bit_array[14] - M414: wait_dock bit

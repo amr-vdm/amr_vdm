@@ -19,14 +19,14 @@ class CheckCameraConnection:
         rospy.Subscriber("/front_camera/camera_startup_finished", Bool, self.front_camera_finished_cb)
         
         self.reset_back_camera_ = rospy.ServiceProxy("/back_camera/realsense2_camera/reset", Empty)
-        rospy.loginfo("Connecting to /back_camera/realsense2_camera/reset service...")
+        rospy.loginfo("/check_camera_connection: Connecting to /back_camera/realsense2_camera/reset service...")
         self.reset_back_camera_.wait_for_service()
-        rospy.loginfo("Connected to /back_camera/realsense2_camera/reset service.")
+        rospy.loginfo("/check_camera_connection: Connected to /back_camera/realsense2_camera/reset service.")
 
         self.reset_front_camera_ = rospy.ServiceProxy("/front_camera/realsense2_camera/reset", Empty)
-        rospy.loginfo("Connecting to /front_camera/realsense2_camera/reset service...")
+        rospy.loginfo("/check_camera_connection: Connecting to /front_camera/realsense2_camera/reset service...")
         self.reset_front_camera_.wait_for_service()
-        rospy.loginfo("Connected to /front_camera/realsense2_camera/reset service.")
+        rospy.loginfo("/check_camera_connection: Connected to /front_camera/realsense2_camera/reset service.")
 
         self.enable_emitter_dyncli_ = dyncli.Client("/back_camera/stereo_module")
 
@@ -43,7 +43,7 @@ class CheckCameraConnection:
             except Exception as ex:
                 rospy.logwarn(ex)
                 if not self.back_camera_status_:
-                    rospy.logwarn("Reseting back camera again...!")
+                    rospy.logwarn("/check_camera_connection: Reseting back camera again...!")
                     self.reset_back_camera_.call()
 
             if self.back_camera_status_ and self.front_camera_status_:
@@ -58,7 +58,7 @@ class CheckCameraConnection:
                 self.front_camera_status_ = True
             except:
                 if not self.front_camera_status_:
-                    rospy.logwarn("Reseting front camera again...!")
+                    rospy.logwarn("/check_camera_connection: Reseting front camera again...!")
                     self.reset_front_camera_.call()
             
             if self.back_camera_status_ and self.front_camera_status_:

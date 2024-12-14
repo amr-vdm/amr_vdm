@@ -1,3 +1,0 @@
-Header header
-
-CheckerSensorState sensor_state

@@ -215,8 +215,7 @@ namespace amr_base
         current_break_bytes[0] = bytes[0];
         current_break_bytes[1] = bytes[1];
 
-        ROS_WARN("... Initialize AMR Hardware Interface successfully!");
-
+        ROS_INFO("Initialized hardware interface.");
         return true;
     }
 
@@ -420,7 +419,7 @@ namespace amr_base
             ros::Duration(0.1).sleep();
         }
         if (isConected){
-            ROS_WARN("PC connected to PLC successfully!");
+            ROS_INFO("PC connected to PLC successfully!");
             return true;
         } else {
             ROS_ERROR("PC can not connect to PLC (some error)!");
@@ -568,7 +567,7 @@ namespace amr_base
 
         while (!isOriginOK &&  (ros::Time::now() < start + timeout))
         {
-            ROS_WARN("Setting slider motor to original postion...");
+            ROS_INFO("Setting slider motor to original postion...");
             isOriginOK = sktcpclient_fx3u_.read_bit_FX3U('M',(uint32_t)bit_slider_origin[1]);
             ros::Duration(0.5).sleep();
         }
@@ -579,7 +578,7 @@ namespace amr_base
             ROS_INFO("Set slider motor's original position successfully!");
             return true;
         } else {
-            ROS_ERROR("CAN NOT SET THE SLIDER MOTOR TO ORIGINAL POSITION!");
+            ROS_ERROR("Can't set slider motor to origin position! Timeout!");
             return false;
         }
     }

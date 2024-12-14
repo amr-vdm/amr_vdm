@@ -4,9 +4,7 @@ import rospy
 import tf2_ros
 
 from geometry_msgs.msg import Pose, PoseWithCovarianceStamped
-from sensor_msgs.msg import JointState
 from nav_msgs.msg import Odometry
-
 
 class PoseEstimation():
 
@@ -31,11 +29,11 @@ class PoseEstimation():
         self.set_position = 0
         self.is_manual_pose_ = False
     
-        rospy.Subscriber("mobile_base_controller/odom", Odometry, self.odomCb)
-        rospy.Subscriber("/initialposeAMR", PoseWithCovarianceStamped, self.initialPoseAMRCb)
+        rospy.Subscriber("mobile_base_controller/odom", Odometry, self.odom_callback)
+        rospy.Subscriber("/initialposeAMR", PoseWithCovarianceStamped, self.initialpose_AMR_callback)
 
 
-    def get2DPose(self):
+    def get_2d_pose(self):
         """
         Take 2D Pose
         """
@@ -59,19 +57,19 @@ class PoseEstimation():
             return None
 
     
-    def initialPoseAMRCb(self, msg: PoseWithCovarianceStamped):
+    def initialpose_AMR_callback(self, msg: PoseWithCovarianceStamped):
         self.map_is_ready = True
         self.poseFromInitial = msg.pose.pose
-        self.setPoseEstimation(self.poseFromInitial)
+        self.set_pose(self.poseFromInitial)
 
-    def setPoseEstimation(self, pose: Pose):
+    def set_pose(self, pose: Pose):
         msg = PoseWithCovarianceStamped()
         msg.pose.pose = pose
         msg.header.frame_id = self.frame_id
 
         self.pub_initial_pose.publish(msg)    
 
-    def odomCb(self, msg: Odometry):
+    def odom_callback(self, msg: Odometry):
         if not self.map_is_ready:
             return
 
@@ -80,22 +78,22 @@ class PoseEstimation():
 
         if (abs(linear_vel) <= 0.01 and abs(angular_vel) <= 0.01):
             if not self.state_flag:
-                pose = self.get2DPose()
+                pose = self.get_2d_pose()
                 self.pose.position.x = pose[0]
                 self.pose.position.y = pose[1]
                 self.pose.orientation.z = pose[2]
                 self.pose.orientation.w = pose[3]
 
-                rospy.loginfo("Take the robot's current position")
-                self.setPoseEstimation(self.pose)
+                rospy.loginfo("/pose_estimation: Take the robot's current position")
+                self.set_pose(self.pose)
                 self.state_flag = True
             
             if self.timer >= 100:
                 if self.poseFromInitial is not None:
-                    rospy.logwarn("Take initial position from topic /initialposeAMR!")
+                    rospy.loginfo("/pose_estimation: Take initial position from topic /initialposeAMR!")
                     self.pose = self.poseFromInitial
                     self.poseFromInitial = None
-                self.setPoseEstimation(self.pose)
+                self.set_pose(self.pose)
                 self.timer = 0
             
             else:
