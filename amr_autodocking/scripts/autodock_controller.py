@@ -653,9 +653,7 @@ class AutoDockStateMachine(AutoDockServer):
                     # Check yaw
                     if check_yaw_counter < 2:
                         if abs(yaw) > self.cfg.yaw_predock_tolerance:
-                            if not self.rotate_with_odom(
-                                self.cfg.min_angular_vel, self.cfg.max_angular_vel, yaw
-                            ):
+                            if not self.rotate_with_odom(yaw):
                                 return False
                             check_yaw_counter += 1
                             continue
@@ -762,11 +760,7 @@ class AutoDockStateMachine(AutoDockServer):
         self.brake(False)
         for action in go_in_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
-                if not self.rotate_with_odom(
-                    self.cfg.min_angular_vel,
-                    self.cfg.max_angular_vel,
-                    action.value * math.pi / 180,
-                ):
+                if not self.rotate_with_odom(action.value * math.pi / 180):
                     return False
             elif action.action_type == DockParam.TYPE_MOVE:
                 if not self.move_with_odom(
@@ -798,11 +792,7 @@ class AutoDockStateMachine(AutoDockServer):
         for action in go_out_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
                 self.set_state(DockState.GO_OUT_DOCK, f"Rotate robot {action.value} degrees!")
-                if not self.rotate_with_odom(
-                    self.cfg.min_angular_vel,
-                    self.cfg.max_angular_vel,
-                    action.value * math.pi / 180,
-                ):
+                if not self.rotate_with_odom(action.value * math.pi / 180):
                     return False
             elif action.action_type == DockParam.TYPE_MOVE:
                 self.set_state(DockState.GO_OUT_DOCK, f"Move robot {action.value}m !")

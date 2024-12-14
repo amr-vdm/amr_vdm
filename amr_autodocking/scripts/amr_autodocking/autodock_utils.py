@@ -245,19 +245,6 @@ def sat_proportional_filter(input: float, abs_min=0.0, abs_max=10.0, factor=1.0)
     return output
 
 
-def limit_angular_velocity(input:float,
-                           angular_velocity:float,
-                           min_angular,
-                           max_angular) -> float:
-
-    if angular_velocity > max_angular:
-        angular_velocity = max_angular
-    elif angular_velocity < min_angular:
-        angular_velocity = min_angular
-    
-    return (angular_velocity if input > 0 else -angular_velocity)
-
-
 def bin_filter(input: float, abs_boundary: float) -> float:
     """
     Simple binary filter, will provide abs_ceiling as a binary output,
@@ -298,3 +285,14 @@ def flip_base_frame(input: Pose2D):
     quadrant. Currently is used to flip from 'back dock' to 'front dock'
     """
     return -input[0], -input[1], flip_yaw(input[2])
+
+
+def clamp(value, low, high):
+    """
+    Clamps a value within a specified range.
+    * `value`: The value to be clamped.
+    * `low`: The lower bound of the range.
+    * `high`: The upper bound of the range.
+    * @return: The clamped value within the specified range.
+    """
+    return max(low, min(value, high))

@@ -49,6 +49,7 @@ class AutodockConfig:
     )
     front_laser_offset = 0.14802 + 0.1025 / 2
     steer_distance_threshold = 0.97
+    odom_topic = "odom"
 
     # [Frames]
     base_link = "base_link"
@@ -70,7 +71,11 @@ class AutodockConfig:
     linear_vel_range = [-0.2, 0.2]
     angular_vel_range = [-0.3, 0.3]
     max_angular_vel = 0.3  # rad/s
+    max_angular_accel = 3.2
+    max_angular_deccel = 0.3
     min_angular_vel = 0.05
+    rotate_to_heading_angular_vel = 0.5
+    angle_threshold = 0.35
     max_linear_vel = 0.2
     max_linear_vel_predock = 0.15
     min_linear_vel = 0.025
@@ -124,6 +129,7 @@ class AutoDockServer:
         self.slider_sensor_state_ = [0, 0]
         self.cart_sensor_state_ = (0, 0)
         self.tag_frame_ = ""
+        self.current_speed_ = Twist()
         self.dock_state_ = DockState.IDLE
         self.start_time_ = rospy.Time.now()
         self.dock_timeout_ = self.cfg.dock_timeout
@@ -204,6 +210,7 @@ class AutoDockServer:
         self.wait_dock_frame_pub_ = rospy.Publisher("wait_dock_frame", Bool, queue_size=5)
 
         # Subscribers
+        rospy.Subscriber("/amr/odometry/filtered", Odometry, self.odom_callback)
         rospy.Subscriber("PAUSE_AMR", Bool, self.pause_callback)
         rospy.Subscriber("pickup_current_state", Bool, self.pickup_current_state_callback)
         rospy.Subscriber("drop_current_state", Bool, self.dropoff_current_state_callback)
@@ -259,11 +266,7 @@ class AutoDockServer:
                     rospy.logwarn(
                         "DROPOFF: Detect cart frame don't move out, will rotate and wait for hand control"
                     )
-                    self.rotate_with_odom(
-                        self.cfg.min_angular_vel,
-                        self.cfg.max_angular_vel,
-                        -rotate_to_dock * math.pi / 180,
-                    )
+                    self.rotate_with_odom(-rotate_to_dock * math.pi / 180)
                     self.wait_dock_frame_pub_.publish(True)
                     self.is_waiting_dock_ = True
 
@@ -274,11 +277,7 @@ class AutoDockServer:
                             "DROPOFF: Receive trigger continue DROPOFF, will continue docking"
                         )
                         self.wait_dock_frame_pub_.publish(False)
-                        self.rotate_with_odom(
-                            self.cfg.min_angular_vel,
-                            self.cfg.max_angular_vel,
-                            rotate_to_dock * math.pi / 180,
-                        )
+                        self.rotate_with_odom(rotate_to_dock * math.pi / 180)
                         self.start_time_ = rospy.Time.now()
                         return True
                     except:
@@ -377,13 +376,11 @@ class AutoDockServer:
         )
 
         return (
-            self.rotate_with_odom(self.cfg.min_angular_vel, self.cfg.max_angular_vel, ori * rot_rad)
+            self.rotate_with_odom(ori * rot_rad)
             and self.move_with_odom(
                 self.cfg.min_linear_vel, self.cfg.max_linear_vel_predock, dir * dis_move
             )
-            and self.rotate_with_odom(
-                self.cfg.min_angular_vel, self.cfg.max_angular_vel, -ori * rot_rad
-            )
+            and self.rotate_with_odom(-ori * rot_rad)
             and self.move_with_odom(
                 self.cfg.min_linear_vel, self.cfg.max_linear_vel_predock, -dir * dis_back
             )
@@ -426,13 +423,11 @@ class AutoDockServer:
             )
 
             return (
-                self.rotate_with_odom(self.cfg.min_angular_vel, self.cfg.max_angular_vel, rot_angle)
+                self.rotate_with_odom(rot_angle)
                 and self.move_with_odom(
                     self.cfg.min_linear_vel, self.cfg.max_linear_vel_predock, dis_move
                 )
-                and self.rotate_with_odom(
-                    self.cfg.min_angular_vel, self.cfg.max_angular_vel, -rot_angle
-                )
+                and self.rotate_with_odom(-rot_angle)
             )
         
 
@@ -484,6 +479,9 @@ class AutoDockServer:
     def reset_high_current(self):
         self.high_motor_pickup_current_ = False
         self.high_motor_drop_current_ = False
+
+    def odom_callback(self, msg:Odometry):
+        self.current_speed_ = msg.twist.twist
 
     def laser_scan_callback(self, msg: LaserScan):
         self.left_range_ = min(msg.ranges[80:100])
@@ -628,18 +626,16 @@ class AutoDockServer:
                 self.start_time_ = rospy.Time.now()
         return self.is_pause_ or self.obstacle_detected_
     
-    def clamp(self, value, low, high):
-        return max(low, min(value, high))
 
     def publish_velocity(self, linear_vel=0.0, angular_vel=0.0):
         """
         Command the robot to move, default param is STOP!
         """
         msg = Twist()
-        msg.linear.x = self.clamp(linear_vel,
+        msg.linear.x = utils.clamp(linear_vel,
                                   self.cfg.linear_vel_range[0],
                                   self.cfg.linear_vel_range[1])
-        msg.angular.z = self.clamp(angular_vel,
+        msg.angular.z = utils.clamp(angular_vel,
                                   self.cfg.angular_vel_range[0],
                                   self.cfg.angular_vel_range[1])
 
@@ -798,12 +794,11 @@ class AutoDockServer:
             self.rate_.sleep()
         exit(0)
 
-    def rotate_with_odom(self, v_w_min: float, v_w_max: float, rotate: float) -> bool:
+    def rotate_with_odom(self, rotate: float) -> bool:
         """
         Spot Rotate the robot with odom. Blocking function
-        :return : success
-        `rotate`: How many degrees for rotating
-        `v_w`: angular velocity
+        * `rotate`: In degree
+        * @return : success
         """
         self.set_state(self.dock_state_, f"Turn robot: {rotate:.2f} rad!")
 
@@ -813,9 +808,7 @@ class AutoDockServer:
 
         # get the tf mat from odom to goal frame
         _goal_tf = utils.apply_2d_transform(_initial_tf, (0, 0, rotate))
-        _pid = utils.PID(self.cfg.k_p, self.cfg.k_i, self.cfg.k_d, v_w_min, v_w_max)
 
-        prev_time = rospy.Time.now()
         while not rospy.is_shutdown():
 
             if self.check_cancel():
@@ -844,15 +837,23 @@ class AutoDockServer:
                     self.publish_velocity()
                     rospy.logwarn("Done with rotate robot")
                     return True
-
-                time_now = rospy.Time.now()
-                dt = (time_now - prev_time).to_sec()
-                angular_vel_pid = _pid.update(rotate, rotate - dyaw, dt)
+                
                 sign = 1 if rotate > 0 else -1
-                angular_vel = sign * angular_vel_pid
+
+                angular_vel = sign * self.cfg.rotate_to_heading_angular_vel
+                dt = 1 / self.cfg.controller_frequency
+                
+                min_feasible_angular_speed = self.current_speed_.angular.z - self.cfg.max_angular_accel * dt
+                max_feasible_angular_speed = self.current_speed_.angular.z + self.cfg.max_angular_accel * dt
+                
+                angular_vel = utils.clamp(angular_vel, min_feasible_angular_speed, max_feasible_angular_speed)
+
+                if abs(dyaw) < self.cfg.angle_threshold:
+                    angular_vel = \
+                        sign * utils.clamp(self.cfg.rotate_to_heading_angular_vel * abs(dyaw) / self.cfg.max_angular_deccel,
+                                    self.cfg.min_angular_vel, self.cfg.rotate_to_heading_angular_vel)
 
                 self.publish_velocity(angular_vel=angular_vel)
-                prev_time = time_now
             self.rate_.sleep()
         exit(0)
 
