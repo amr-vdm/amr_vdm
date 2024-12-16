@@ -9,6 +9,7 @@ class BackScannerSafety():
 
     def __init__(self):
         self.is_running_  = False
+        self.is_pause_    = False
         self.is_turn_off_ = False
         self.prev_obstacle_state_ = SafetyStatus.NORMAL
 
@@ -19,6 +20,10 @@ class BackScannerSafety():
         rospy.Subscriber("/sick_safetyscanners_back/output_paths", OutputPathsMsg, self.back_safety_state_callback)
         rospy.Subscriber("turn_off_back_safety", Bool, self.turn_off_back_safety_callback)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
+        rospy.Subscriber('PAUSE_AMR', Bool, self.pause_callback)
+
+    def pause_callback(self,msg: Bool):
+        self.is_pause_ = msg.data
     
     def runonce_callback(self,msg: Bool):
         self.is_running_ = msg.data
@@ -41,10 +46,11 @@ class BackScannerSafety():
             obstacle_state = SafetyStatus.NORMAL
         
         if obstacle_state != self.prev_obstacle_state_:
-            if obstacle_state == SafetyStatus.PROTECTED:
-                rospy.logwarn("/back_safety_status: Detect obstacle!")            
-            else:
-                rospy.loginfo("/back_safety_status: No obstacle in field.")
+            if not self.is_pause_:
+                if obstacle_state == SafetyStatus.PROTECTED:
+                    rospy.logwarn("/back_safety_status: Detect obstacle!")            
+                else:
+                    rospy.loginfo("/back_safety_status: No obstacle in field.")
 
             safety = SafetyStatusStamped()
             safety.header.frame_id = "back_laser_link"

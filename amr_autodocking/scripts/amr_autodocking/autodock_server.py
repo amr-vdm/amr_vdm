@@ -21,7 +21,7 @@ import numpy as np
 import actionlib
 import amr_autodocking.autodock_utils as utils
 import dynamic_reconfigure.client as client
-from typing import List
+from typing import List, Tuple
 
 from amr_autodocking.autodock_utils import DockState
 from amr_autodocking.msg import AutoDockingFeedback
@@ -36,6 +36,7 @@ from tf.transformations import euler_from_quaternion
 from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
 
+Pose2D = Tuple[float, float, float]
 
 class AutodockConfig:
     # [General configure]
@@ -322,18 +323,34 @@ class AutoDockServer:
         elif signal == 2:
             self.polygon_client.update_configuration(self.dropoff_polygon_params)
 
-    def check_dock_frame(self, laser_frame, tag_frame):
+    def get_dock_pose(self, laser_frame, tag_frame) -> Pose2D:
         laser_tf = self.get_tf(laser_frame)
         if laser_tf is None:
-            return False
-        
-        tag_tf = self.get_tf(tag_frame)
-        if tag_tf is not None:
-            x, y, yaw    = utils.get_2d_pose(laser_tf)
-            x1, y1, yaw1 = utils.get_2d_pose(tag_tf)
+            tag_tf = self.get_tf(tag_frame)
+            if tag_tf is not None:
+                dx, dy, dyaw = utils.get_2d_pose(tag_tf)
+                return dx, dy, dyaw
+        else:
+            tag_tf = self.get_tf(tag_frame)
+            if tag_tf is not None:
+                x, y, yaw    = utils.get_2d_pose(laser_tf)
+                x1, y1, yaw1 = utils.get_2d_pose(tag_tf)
+                
+                if abs(yaw) < abs(yaw1):
+                    dyaw = yaw
+                else:
+                    dyaw = yaw1
+                
+                if abs(x-x1) <= 0.03 and abs(y-y1)<= 0.03:
+                    dx = x
+                    dy = y
+                else:
+                    dx = x1
+                    dy = y1
 
-            return (abs(x-x1) <= 0.05 and abs(y-y1)<= 0.03)
-        return True
+                return dx, dy, dyaw
+
+        raise ValueError("Can not detect all frame!")
 
     def pid_controller(self, dis_y):
         error = dis_y - self.last_error
@@ -438,6 +455,7 @@ class AutoDockServer:
         try:
             self.back_apriltag_detector_cli_.call(signal)
             self.front_apriltag_detector_cli_.call(not signal)
+            rospy.sleep(1.0)
             return True
         except rospy.ServiceException as e:
             rospy.logerr("/autodock_controller: Service call failed: %s" % e)
@@ -835,7 +853,7 @@ class AutoDockServer:
 
                 if abs(dyaw) < self.cfg.stop_yaw_diff:
                     self.publish_velocity()
-                    rospy.logwarn("/autodock_controller: Done with rotate robot")
+                    rospy.loginfo("/autodock_controller: Done with rotate robot")
                     return True
                 
                 sign = 1 if rotate > 0 else -1

@@ -13,6 +13,7 @@ class UltrasonicSafety():
         self.default_distance_   = 0.3
         self.small_distance_ = 0.075
         self.is_running_ = False
+        self.is_pause_   = False
         self.turn_off_ultrasonic_safety_ = False
         self.left_ultrasonic_range_  = 0.0
         self.right_ultrasonic_range_ = 0.0
@@ -29,6 +30,10 @@ class UltrasonicSafety():
         rospy.Subscriber("safety_zone_type", SafetyZone, self.zone_type_callback)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
         rospy.Subscriber("turn_off_ultrasonic_safety", Bool, self.turn_off_ultrasonic_callback)
+        rospy.Subscriber('PAUSE_AMR', Bool, self.pause_callback)
+
+    def pause_callback(self,msg: Bool):
+        self.is_pause_ = msg.data
     
     def turn_off_ultrasonic_callback(self, msg:Bool):
         self.turn_off_ultrasonic_safety_ = msg.data
@@ -70,10 +75,11 @@ class UltrasonicSafety():
                         self.obstacle_state_ = SafetyStatus.NORMAL
                 
                 if self.obstacle_state_ != self.prev_obstacle_state_:
-                    if self.obstacle_state_ == SafetyStatus.PROTECTED:
-                        rospy.logwarn("/ultrasonic_safety_status: Detect obstacle!")
-                    else:
-                        rospy.loginfo("/ultrasonic_safety_status: No obstacle in range.")
+                    if not self.is_pause_:
+                        if self.obstacle_state_ == SafetyStatus.PROTECTED:
+                            rospy.logwarn("/ultrasonic_safety_status: Detect obstacle!")
+                        else:
+                            rospy.loginfo("/ultrasonic_safety_status: No obstacle in range.")
                     
                     safety = SafetyStatusStamped()
                     safety.header.frame_id = "ultrasonic_link"

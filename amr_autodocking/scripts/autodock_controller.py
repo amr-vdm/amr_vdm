@@ -598,6 +598,7 @@ class AutoDockStateMachine(AutoDockServer):
                     dock_pose = utils.get_2d_pose(dock_tf)
                     if len(pose_list) < self.cfg.predock_tf_samples:
                         pose_list.append(dock_pose)
+                        self.rate_.sleep()
                         continue
 
                     avg_pose = utils.avg_2d_poses(pose_list)
@@ -612,6 +613,7 @@ class AutoDockStateMachine(AutoDockServer):
                         ):
                             return False
                         check_yaw_counter += 1
+                        self.rate_.sleep()
                         continue
 
                     if (check_y_counter < 3) and (abs(y) > self.cfg.max_parallel_offset):
@@ -622,27 +624,27 @@ class AutoDockStateMachine(AutoDockServer):
                         check_y_counter += 1
                         check_yaw_counter = 0
                         self.set_state(DockState.PREDOCK, "")
+                        self.rate_.sleep()
                         continue
                 else:
                     if (mode == DockMode.MODE_DROPOFF):
-                        dock_name = self.cfg.parallel_frame
+                        dock_tf = self.get_tf(self.cfg.parallel_frame)
+                        if dock_tf is None:
+                            rospy.logerr(f"/autodock_controller: Can not detect all frame!")
+                            self.error_pub_.publish(4)
+                            return False
+                        dock_pose = utils.get_2d_pose(dock_tf)
                     else:
-                        if self.check_dock_frame(self.cfg.first_frame, self.tag_frame_):
-                            dock_name = self.cfg.first_frame
-                        else:
-                            dock_name = self.tag_frame_
-                    
-                    dock_tf = self.get_tf(dock_name)
-
-                    if dock_tf is None:
-                        rospy.logerr(f"/autodock_controller: Can not detect all frame!")
-                        self.error_pub_.publish(4)
-                        return False
-
-                    dock_pose = utils.get_2d_pose(dock_tf)
+                        try:
+                            dock_pose = self.get_dock_pose(self.cfg.first_frame, self.tag_frame_)
+                        except ValueError as e:
+                            rospy.logerr(f"/autodock_controller: {e}")
+                            self.error_pub_.publish(4)
+                            return False
 
                     if len(pose_list) < self.cfg.predock_tf_samples:
                         pose_list.append(dock_pose)
+                        self.rate_.sleep()
                         continue
 
                     avg_pose = utils.avg_2d_poses(pose_list)
@@ -656,6 +658,7 @@ class AutoDockStateMachine(AutoDockServer):
                             if not self.rotate_with_odom(yaw):
                                 return False
                             check_yaw_counter += 1
+                            self.rate_.sleep()
                             continue
 
                     # Check y
@@ -677,6 +680,7 @@ class AutoDockStateMachine(AutoDockServer):
                                 check_yaw_counter = 0
                                 self.update_polygon_param(1)
                                 self.set_state(DockState.PREDOCK, "")
+                                self.rate_.sleep()
                                 continue
 
                             elif mode == DockMode.MODE_DROPOFF and not self.correct_robot(
@@ -686,6 +690,7 @@ class AutoDockStateMachine(AutoDockServer):
 
                             check_y_counter += 1
                             check_yaw_counter = 0
+                            self.rate_.sleep()
                             continue
 
                         elif mode == DockMode.MODE_PICKUP:
