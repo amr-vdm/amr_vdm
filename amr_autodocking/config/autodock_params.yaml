@@ -33,7 +33,7 @@ linear_vel_range: [-0.2, 0.2]
 angular_vel_range: [-0.5, 0.5]    
 max_angular_vel: 0.5                  # [rad/s]
 min_angular_vel: 0.1                 # [rad/s]
-max_angular_accel: 0.7
+max_angular_accel: 3.2
 max_angular_deccel: 0.3
 angle_threshold: 0.35
 # max_linear_vel: 0.2

@@ -6,7 +6,7 @@ RotationShimController:
   controller_frequency: 20.0
   transform_tolerance: 0.5
   simulate_ahead_time: 1.0
-  angular_dist_threshold: 0.05 # Angle threshold for switch to primary controller
+  angular_dist_threshold: 0.35 # Angle threshold for switch to primary controller
   forward_sampling_distance: 0.5
   angle_threshold: 0.35
   max_angular_vel: 0.5
@@ -134,7 +134,7 @@ RotationShimController:
     dt_hysteresis: 0.1                       
     global_plan_overwrite_orientation: true
     allow_init_with_backwards_motion: true  
-    max_global_plan_lookahead_dist: 1.5 #3.0 
+    max_global_plan_lookahead_dist: 5.0 #3.0 
     force_reinit_new_goal_dist: 1.0
     # force_reinit_new_goal_angular:           
     feasibility_check_no_poses: 5 

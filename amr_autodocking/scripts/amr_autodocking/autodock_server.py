@@ -37,6 +37,13 @@ from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
 
 Pose2D = Tuple[float, float, float]
+PICKUP = 1
+DROPOFF = 2
+BOTH = 0
+CCW = 1
+CW  = 2
+OUT = 1
+IN = 2
 
 class AutodockConfig:
     # [General configure]
@@ -294,63 +301,56 @@ class AutoDockServer:
 
             self.rate_.sleep()
 
-    def distance2D(self, x, y):
-        return math.sqrt(pow(x, 2) + pow(y, 2))
-
-    def update_line_extraction_param(self, signal):
+    def update_line_extraction_param(self, data=0):
         """
-        `0`: Default params | `1`: Pickup params | `2`: Dropoff params
+        Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if signal == 0:
-            self.line_extraction_client.update_configuration(self.default_le_params)
-
-        elif signal == 1:
+        if data == PICKUP:
             self.line_extraction_client.update_configuration(self.pickup_le_params)
 
-        elif signal == 2:
+        elif data == DROPOFF:
             self.line_extraction_client.update_configuration(self.dropoff_le_params)
+        
+        else:
+            self.line_extraction_client.update_configuration(self.default_le_params)
 
-    def update_polygon_param(self, signal):
+    def update_polygon_param(self, data=0):
         """
-        `0`: Default params | `1`: Pickup params | `2`: Dropoff params
+        Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if signal == 0:
-            self.polygon_client.update_configuration(self.default_polygon_params)
-
-        elif signal == 1:
+        if data == PICKUP:
             self.polygon_client.update_configuration(self.pickup_polygon_params)
 
-        elif signal == 2:
+        elif data == DROPOFF:
             self.polygon_client.update_configuration(self.dropoff_polygon_params)
+        
+        else:
+            self.polygon_client.update_configuration(self.default_polygon_params)
 
     def get_dock_pose(self, laser_frame, tag_frame) -> Pose2D:
+        """
+        * @return: Tuple[dx, dy, dyaw]
+        * Otherwise raise ValueError()
+        """
         laser_tf = self.get_tf(laser_frame)
-        if laser_tf is None:
-            tag_tf = self.get_tf(tag_frame)
-            if tag_tf is not None:
-                dx, dy, dyaw = utils.get_2d_pose(tag_tf)
-                return dx, dy, dyaw
-        else:
-            tag_tf = self.get_tf(tag_frame)
-            if tag_tf is not None:
-                x, y, yaw    = utils.get_2d_pose(laser_tf)
-                x1, y1, yaw1 = utils.get_2d_pose(tag_tf)
-                
-                if abs(yaw) < abs(yaw1):
-                    dyaw = yaw
-                else:
-                    dyaw = yaw1
-                
-                if abs(x-x1) <= 0.03 and abs(y-y1)<= 0.03:
-                    dx = x
-                    dy = y
-                else:
-                    dx = x1
-                    dy = y1
+        tag_tf = self.get_tf(tag_frame)
 
-                return dx, dy, dyaw
+        if laser_tf is not None and tag_tf is not None:
+            x, y, yaw    = utils.get_2d_pose(laser_tf)
+            x1, y1, yaw1 = utils.get_2d_pose(tag_tf)
+            
+            dx, dy = (x, y) if abs(x - x1) <= 0.03 and abs(y - y1) <= 0.03 else (x1, y1)
+            dyaw = min(yaw, yaw1, key=abs)
+        
+        elif tag_tf is not None:
+            dx, dy, dyaw = utils.get_2d_pose(tag_tf)
+        
+        elif laser_tf is not None:
+            dx, dy, dyaw = utils.get_2d_pose(laser_tf)
+        
+        else: raise ValueError("Can not detect all frame!")
 
-        raise ValueError("Can not detect all frame!")
+        return dx, dy, dyaw
 
     def pid_controller(self, dis_y):
         error = dis_y - self.last_error
@@ -360,24 +360,23 @@ class AutoDockServer:
         return angle
 
     def correct_robot(
-        self, offset, front_dock: bool = False, rotate_angle=30, rotate_orientation=0
+        self, offset, front_dock: bool = False, rotate_angle=30, rotate_orientation=BOTH
     ) -> bool:
         """
-        Correcting robot respective to dock frame
-        `front_dock`: dock in frontoff robot or backward
-        `rotate_angle` (degrees)
+        Correcting robot respective to dock frame.
+        * `front_dock`: Dock in frontoff robot or backward.
+        * `rotate_angle`: In degrees.
 
-        `rotate_orientation = 1`: Counter clockwise
-        `rotate_orientation = 2`: Clockwise
+        * `rotate_orientation`: CW(Clockwise), CCW(Counter clockwise).
         """
         assert type(rotate_orientation) == int, "/autodock_controller: rotate_orientation is not int type!"
 
         dir = 1
         ori = 1
-        if rotate_orientation == 1:
+        if rotate_orientation == CCW:
             if (front_dock and offset > 0) or (not front_dock and offset < 0):
                 dir = -1
-        elif rotate_orientation == 2:
+        elif rotate_orientation == CW:
             ori = -1
             if (front_dock and offset < 0) or (not front_dock and offset > 0):
                 dir = -1
@@ -448,28 +447,25 @@ class AutoDockServer:
             )
         
 
-    def enable_apriltag_detector(self, signal):
-        """
-        `signal = False`: Disable | `signal = True`: Enable
-        """
+    def enable_apriltag_detector(self, data):
         try:
-            self.back_apriltag_detector_cli_.call(signal)
-            self.front_apriltag_detector_cli_.call(not signal)
+            self.back_apriltag_detector_cli_.call(data)
+            self.front_apriltag_detector_cli_.call(not data)
             rospy.sleep(1.0)
             return True
         except rospy.ServiceException as e:
             rospy.logerr("/autodock_controller: Service call failed: %s" % e)
             return False
 
-    def enable_line_detector(self, laser_name: str, signal: bool):
+    def enable_line_detector(self, laser_name: str, data: bool):
         """
-        `laser_name`: "front" or "back"
+        * `laser_name`: "front" or "back"
         """
         try:
             if laser_name == "front":
-                result = self.front_line_extraction_client.call(signal)
+                result = self.front_line_extraction_client.call(data)
             elif laser_name == "back":
-                result = self.back_line_extraction_client.call(signal)
+                result = self.back_line_extraction_client.call(data)
 
             if result.success:
                 rospy.loginfo(result.message)
@@ -491,7 +487,7 @@ class AutoDockServer:
         self.is_waiting_dock_ = False
         self.high_motor_pickup_current_ = False
         self.high_motor_drop_current_ = False
-        self.update_polygon_param(0)
+        self.update_polygon_param()
         self.brake(False)
 
     def reset_high_current(self):
@@ -517,30 +513,26 @@ class AutoDockServer:
     def cart_sensor_state_callback(self, msg: SliderSensorStamped):
         self.cart_sensor_state_ = msg.sensor_state.data
 
-    def turn_off_back_scan_safety(self, signal):
-        self.turn_off_back_safety_pub_.publish(signal)
+    def turn_off_back_scan_safety(self, data):
+        self.turn_off_back_safety_pub_.publish(data)
 
-    def turn_off_front_scan_safety(self, signal):
-        self.turn_off_front_safety_pub_.publish(signal)
+    def turn_off_front_scan_safety(self, data):
+        self.turn_off_front_safety_pub_.publish(data)
 
-    def turn_off_ultrasonic_safety(self, signal):
-        self.turn_off_ultrasonic_safety_pub_.publish(signal)
+    def turn_off_ultrasonic_safety(self, data):
+        self.turn_off_ultrasonic_safety_pub_.publish(data)
 
-    def turn_off_front_depth_safety(self, signal):
-        self.turn_off_front_depth_scan_safety_pub_.publish(signal)
+    def turn_off_front_depth_safety(self, data):
+        self.turn_off_front_depth_scan_safety_pub_.publish(data)
 
-    def brake(self, signal):
-        self.cmd_brake_pub_.publish(signal)
+    def brake(self, data):
+        self.cmd_brake_pub_.publish(data)
 
-    def cmd_slider(self, signal):
+    def cmd_slider(self, data):
         """
-        `signal = 1`: Slider go out
-        `signal = 2`: Slider go in
+        * `data`: IN or OUT
         """
-        msg = "out" if signal == 1 else "in"
-        rospy.loginfo(f"/autodock_controller: Publishing slider motor go {msg}!")
-
-        self.cmd_slider_pub_.publish(signal)
+        self.cmd_slider_pub_.publish(data)
 
     def pickup_current_state_callback(self, msg: Bool):
         self.high_motor_pickup_current_ = msg.data
@@ -560,8 +552,8 @@ class AutoDockServer:
     ) -> bool:
         """
         Virtual function. This function will be triggered when autodock request
-        is requested
-        :return : if action succeeded
+        is requested.
+        * @return : if action succeeded.
         """
         rospy.logwarn(
             "/autodock_controller: Server implementation has not been specified. " "Do overload the start() function"
@@ -570,9 +562,9 @@ class AutoDockServer:
 
     def set_state(self, state: DockState, printout=""):
         """
-        set state of the auto dock server
-        :param state:       Current utils.DockState
-        :param printout:    Verbose description of the state
+        Set state of the auto dock server.
+        * param state:       Current utils.DockState
+        * param printout:    Verbose description of the state.
         """
         state_str = DockState.to_string(state)
         self.dock_state_ = state
@@ -664,9 +656,9 @@ class AutoDockServer:
     ) -> np.ndarray:
         """
         This will provide the transformation of the marker,
-        if ref_link is not provided, we will use robot's base_link as ref
-        :param now : this is a hack fix
-        :return : 4x4 homogenous matrix, None if not avail
+        if ref_link is not provided, we will use robot's base_link as ref.
+        * param now : this is a hack fix
+        * @return : 4x4 homogenous matrix, None if not avail
         """
         if ref_link is None:
             ref_link = self.cfg.base_link
@@ -725,7 +717,7 @@ class AutoDockServer:
     def get_odom(self) -> np.ndarray:
         """
         Get the current odom of the robot
-        :return : 4x4 homogenous matrix, None if not avail
+        * @return : 4x4 homogenous matrix, None if not avail
         """
         try:
             return utils.get_mat_from_odom_msg(
@@ -739,10 +731,10 @@ class AutoDockServer:
 
     def retry_with_high_current(self, forward, times=0, limit=None) -> bool:
         """
-        Move robot forward when catch high motor current
-        `forward`: How far for moving robot
-        `times`: How many times for retry
-        `limit`: If `times` > `limit` --> ERROR
+        Move robot forward when get high motor current.
+        * `forward`: (in m) How far for moving robot
+        * `times`: How many times for retry
+        * `limit`: If `times` > `limit` --> False
         """
         if times == limit:
             rospy.logerr(f"/autodock_controller: The times of high current exceed {limit}!")
@@ -754,8 +746,9 @@ class AutoDockServer:
 
     def move_with_odom(self, min_speed: float, max_speed: float, forward: float) -> bool:
         """
-        Move robot in linear motion with Odom. Blocking function
-        :return : success
+        Move robot in linear motion with Odom. Blocking function.
+        * `forward`: in m.
+        * @return : success
         """
         self.set_state(self.dock_state_, f"Move robot: {forward:.2f}m!")
 
@@ -814,7 +807,7 @@ class AutoDockServer:
 
     def rotate_with_odom(self, rotate: float) -> bool:
         """
-        Spot Rotate the robot with odom. Blocking function
+        Spot Rotate the robot with odom. Blocking function.
         * `rotate`: In degree
         * @return : success
         """

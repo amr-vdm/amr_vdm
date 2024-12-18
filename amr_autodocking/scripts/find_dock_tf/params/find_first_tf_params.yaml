@@ -10,4 +10,4 @@ pattern_dis_ad: 0.359
 pattern_dis_bc: 0.18
 pattern_dis_ab: 0.05
 laser_frame_id: back_laser_link
-dock_name: cart_frame
+dock_frame: cart_frame

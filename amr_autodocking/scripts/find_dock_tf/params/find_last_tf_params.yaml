@@ -5,4 +5,4 @@ angle_tolerance: 0.15
 angle_threshold: 0.5
 pattern_dis_bc: 0.18
 laser_frame_id: back_laser_link
-dock_name: last_frame
+dock_frame: last_frame

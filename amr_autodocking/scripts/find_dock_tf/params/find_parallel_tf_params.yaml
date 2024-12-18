@@ -6,4 +6,4 @@ detect_angle_tolerance: 0.15
 angle_threshold: 0.5
 pattern_distance_lr: 0.407
 laser_frame_id: back_laser_link
-dock_name: parallel_frame
+dock_frame: parallel_frame

@@ -50,6 +50,7 @@ class PCWritePLC(Type1E):
         self.slider_cmd = 0
         self.mode_error = 0
         self.camera_startup_finished = 0
+        self.is_pause_ = False
 
         # Only Subcriber:
         rospy.Subscriber("status_protected_field",Bool,self.protected_field_callback)
@@ -105,7 +106,6 @@ class PCWritePLC(Type1E):
 
     def protected_field_callback(self, msg: Bool):
         self.status_protected_field = msg.data
-
         if self.status_protected_field:
             self.batchwrite_bitunits(self.params.obstacle_detecting_bit, [1])  # M4
             rospy.logerr("/PC_WRITE_PLC: Detect obtacles in protected filed!")
