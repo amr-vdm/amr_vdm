@@ -134,7 +134,8 @@ RotationShimController:
     dt_hysteresis: 0.1                       
     global_plan_overwrite_orientation: true
     allow_init_with_backwards_motion: true  
-    max_global_plan_lookahead_dist: 5.0 #3.0 
+    max_global_plan_lookahead_dist: 1.5 #3.0
+    max_global_plan_lookbackward_dist: 5.0
     force_reinit_new_goal_dist: 1.0
     # force_reinit_new_goal_angular:           
     feasibility_check_no_poses: 5 
