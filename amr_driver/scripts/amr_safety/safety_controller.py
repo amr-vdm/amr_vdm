@@ -15,13 +15,8 @@ class SafetyController():
         self.speed_at_warninglv1 = rospy.get_param("~speed_at_warninglv1", 0.55)
         self.speed_at_warninglv2 = rospy.get_param("~speed_at_warninglv2", 0.7)
 
-        self.client_movebase_          = dc.Client("/move_base_node")
         self.global_costmap_footprint_ = dc.Client("/move_base_node/global_costmap")
         self.local_costmap_footprint_  = dc.Client("/move_base_node/local_costmap")
-
-        # Move base dynamic reconfigure:
-        self.timeout_obstacles_ = {'oscillation_timeout': 0.0}
-        self.timeout_normal_ = {'oscillation_timeout': 15.0}
 
         # Footprint dynamic reconfigure:
         self.default_footprint_ = {'footprint': [[0.22,0.22],[-0.6,0.22],[-0.6,-0.22],[0.22,-0.22]]}
@@ -104,11 +99,6 @@ class SafetyController():
         if msg.data:
             self.ultrasonic_safety_state_ = SafetyStatus.NORMAL
 
-    def configure_timeout(self,config):
-        if self.is_pause_:
-            return
-        self.client_movebase_.update_configuration(config)
-
     def back_scanner_state_callback(self,msg: SafetyStatusStamped):
         if self.is_turn_off_back_:
             return
@@ -151,13 +141,11 @@ class SafetyController():
                     or self.back_scanner_state_ == SafetyStatus.PROTECTED
                     or self.ultrasonic_safety_state_ == SafetyStatus.PROTECTED
                     or self.front_depth_scan_state_ == SafetyStatus.PROTECTED):
-                    
-                    self.field_state_ = SafetyStatus.PROTECTED
+    
                     delay_time = 0.0
-
-                    if self.field_state_ != self.prev_field_state_:
+                    if self.field_state_ != SafetyStatus.PROTECTED:
+                        self.field_state_ = SafetyStatus.PROTECTED
                         self.protected_field_status_pub_.publish(True)
-                        self.configure_timeout(self.timeout_obstacles_)
                 else:
                     if (self.field_state_ == SafetyStatus.PROTECTED):
                         if delay_time >= 2.0:
@@ -173,7 +161,6 @@ class SafetyController():
                     
                     if (self.field_state_ != self.prev_field_state_):
                         delay_time = 0.0
-                        self.configure_timeout(self.timeout_normal_)
                         self.update_velocity(self.front_scanner_state_)
                     
                 self.prev_field_state_ = self.field_state_
