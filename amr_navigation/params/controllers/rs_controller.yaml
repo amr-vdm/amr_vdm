@@ -6,7 +6,7 @@ RotationShimController:
   controller_frequency: 20.0
   transform_tolerance: 0.5
   simulate_ahead_time: 1.0
-  angular_dist_threshold: 0.35 # Angle threshold for switch to primary controller
+  angular_dist_threshold: 0.05 # Angle threshold for switch to primary controller
   forward_sampling_distance: 0.5
   angle_threshold: 0.35
   max_angular_vel: 0.5
