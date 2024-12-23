@@ -357,7 +357,7 @@ class AutoDockServer:
         
         else: raise ValueError("Can not detect all frame!")
 
-        return dx, dy, dyaw if abs(dyaw) <= 0.17 else 0.17 if dyaw >= 0.0 else -0.17
+        return dx, dy, utils.clamp(dyaw, -0.17, 0.17)
 
     def pid_controller(self, dis_y):
         error = dis_y - self.last_error

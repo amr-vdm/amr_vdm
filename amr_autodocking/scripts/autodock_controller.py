@@ -386,10 +386,7 @@ class AutoDockStateMachine(AutoDockServer):
                 if abs(x) < 0.5:
                     v = sign * min_vel_x
 
-                w = angle
-
-                if abs(w) > 0.15:
-                    w = 0.0
+                w = utils.clamp(angle, -0.15, 0.15)
 
                 self.publish_velocity(v, w)
                 prev_time = time_now
@@ -538,10 +535,7 @@ class AutoDockStateMachine(AutoDockServer):
                         dt = (time_now - prev_time).to_sec()
                         angle = _pid.update(0, y, dt)
 
-                        w = angle
-
-                        if abs(w) > 0.15:
-                            w = 0.0
+                        w = utils.clamp(angle, -0.1, 0.1)
 
                         v = sign * self.cfg.max_x_pid_lastmile
 

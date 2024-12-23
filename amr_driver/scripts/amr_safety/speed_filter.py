@@ -40,8 +40,7 @@ class SpeedFilter():
         # self.client_velocity.update_configuration(DWB_vel)
         # self.client_velocity.update_configuration(VPP_vel)
         self.client_velocity.update_configuration(TEB_vel)
-        rospy.loginfo((f"/speed_filter: Updated velocity to {round(speed, 2)}m/s "
-                       f"from max velocity is {self.max_speed_}m/s."))
+        rospy.loginfo(f"/speed_filter: Current velocity is {speed}m/s.")
 
     def run(self):
         while not rospy.is_shutdown():
