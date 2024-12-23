@@ -37,13 +37,19 @@ from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
 
 Pose2D = Tuple[float, float, float]
-PICKUP = 1
-DROPOFF = 2
-BOTH = 0
-CCW = 1
-CW  = 2
-OUT = 1
-IN = 2
+
+class AutodockConst:
+    BOTH = 0
+    PICKUP = 1
+    DROPOFF = 2
+    CCW = 1
+    CW  = 2
+    OUT = 1
+    IN = 2
+    RETRY_EXCEED = 1
+    SLIDER_TIMEOUT = 2
+    SLIDER_ERROR = 3
+    TF_ERROR = 4
 
 class AutodockConfig:
     # [General configure]
@@ -109,6 +115,7 @@ class AutoDockServer:
 
         self.cfg = config
         self.run_server = run_server
+        self.autodock_const_ = AutodockConst()
 
         # param check
         assert (
@@ -305,10 +312,10 @@ class AutoDockServer:
         """
         Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if data == PICKUP:
+        if data == self.autodock_const_.PICKUP:
             self.line_extraction_client.update_configuration(self.pickup_le_params)
 
-        elif data == DROPOFF:
+        elif data == self.autodock_const_.DROPOFF:
             self.line_extraction_client.update_configuration(self.dropoff_le_params)
         
         else:
@@ -318,10 +325,10 @@ class AutoDockServer:
         """
         Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if data == PICKUP:
+        if data == self.autodock_const_.PICKUP:
             self.polygon_client.update_configuration(self.pickup_polygon_params)
 
-        elif data == DROPOFF:
+        elif data == self.autodock_const_.DROPOFF:
             self.polygon_client.update_configuration(self.dropoff_polygon_params)
         
         else:
@@ -360,23 +367,23 @@ class AutoDockServer:
         return angle
 
     def correct_robot(
-        self, offset, front_dock: bool = False, rotate_angle=30, rotate_orientation=BOTH
+        self, offset, front_dock: bool = False, rotate_angle=30, rotate_orientation=0
     ) -> bool:
         """
         Correcting robot respective to dock frame.
         * `front_dock`: Dock in frontoff robot or backward.
         * `rotate_angle`: In degrees.
 
-        * `rotate_orientation`: CW(Clockwise), CCW(Counter clockwise).
+        * `rotate_orientation`: CW(Clockwise), CCW(Counter clockwise), default is BOTH.
         """
         assert type(rotate_orientation) == int, "/autodock_controller: rotate_orientation is not int type!"
 
         dir = 1
         ori = 1
-        if rotate_orientation == CCW:
+        if rotate_orientation == self.autodock_const_.CCW:
             if (front_dock and offset > 0) or (not front_dock and offset < 0):
                 dir = -1
-        elif rotate_orientation == CW:
+        elif rotate_orientation == self.autodock_const_.CW:
             ori = -1
             if (front_dock and offset < 0) or (not front_dock and offset > 0):
                 dir = -1
@@ -738,7 +745,7 @@ class AutoDockServer:
         """
         if times == limit:
             rospy.logerr(f"/autodock_controller: The times of high current exceed {limit}!")
-            self.error_pub_.publish(1)
+            self.error_pub_.publish(self.autodock_const_.RETRY_EXCEED)
             return False
 
         self.set_state(self.dock_state_, f"Move with odom {forward}m because high motor current!")
