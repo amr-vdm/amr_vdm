@@ -346,9 +346,9 @@ class AutoDockStateMachine(AutoDockServer):
                 return False
 
             else:
-                dock_laser_tf = self.get_tf(self.cfg.first_frame)
+                dock_laser_tf = self.get_tf(self.cfg.first_frame, transform_tolerance=0.1)
                 if self.tag_frame_:
-                    dock_tag_tf = self.get_tf(self.tag_frame_)
+                    dock_tag_tf = self.get_tf(self.tag_frame_, transform_tolerance=0.1)
                 else:
                     dock_tag_tf = None
 
@@ -434,7 +434,7 @@ class AutoDockStateMachine(AutoDockServer):
                     rospy.logwarn("/autodock_controller: BackLaser is out dropoff dock, it's wrong. Please check!")
                     flag = False  # Reset flag for calculate total time
 
-                dock_tf = self.get_tf(self.cfg.parallel_frame)
+                dock_tf = self.get_tf(self.cfg.parallel_frame, transform_tolerance=0.1)
                 if dock_tf is None:
                     return False
 

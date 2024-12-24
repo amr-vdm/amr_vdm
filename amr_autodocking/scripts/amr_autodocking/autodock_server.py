@@ -659,7 +659,8 @@ class AutoDockServer:
         self.cmd_vel_pub_.publish(msg)
 
     def get_tf(
-        self, target_link=None, ref_link=None, target_time=None, print_out=True
+        self, target_link=None, ref_link=None,
+        target_time=None, print_out=True, transform_tolerance=0.5
     ) -> np.ndarray:
         """
         This will provide the transformation of the marker,
@@ -677,7 +678,7 @@ class AutoDockServer:
         try:
             return utils.get_mat_from_transfrom_msg(
                 self.__tfBuffer.lookup_transform(
-                    ref_link, target_link, target_time, rospy.Duration(self.cfg.tf_expiry)
+                    ref_link, target_link, target_time, rospy.Duration(transform_tolerance)
                 )
             )
         except (
