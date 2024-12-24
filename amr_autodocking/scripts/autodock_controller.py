@@ -81,6 +81,9 @@ class AutoDockStateMachine(AutoDockServer):
         """
         rospy.loginfo(f"/autodock_controller: Start autodock! Will attempt with {self.cfg.retry_count} retry!")
 
+        # Reset before start autodocking
+        self.reset_all()
+
         if self.cfg.debug_mode:
             go_in_dock_debug = ""
             for i in range(len(go_in_dock)):
@@ -109,8 +112,6 @@ class AutoDockStateMachine(AutoDockServer):
             print(f"* go_in_dock: {go_in_dock_debug}")
             print(f"* go_out_dock: {go_out_dock_debug}")
 
-        self.brake(False)
-
         if mode == DockMode.MODE_UNDOCK:
             if self.goOutDock(mode, go_out_dock):
                 self.reset()
@@ -124,9 +125,6 @@ class AutoDockStateMachine(AutoDockServer):
         # Custom for robot head to dock
         if not self.goInDock(go_in_dock):
             return False
-
-        # Reset some needed values when start docking
-        self.reset_all()
 
         is_dock_limit = True
         if dock_limit.rotate_angle == 0 and dock_limit.rotate_orientation == 0:
@@ -728,7 +726,6 @@ class AutoDockStateMachine(AutoDockServer):
             if not self.move_with_odom(0.04, 0.055, 0.15):
                 return False
 
-        self.brake(True)
         self.print_success("Completed!")
         return True
 
@@ -754,7 +751,6 @@ class AutoDockStateMachine(AutoDockServer):
         return True
 
     def goInDock(self, go_in_dock: List[DockParam]):
-        self.brake(False)
         for action in go_in_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
                 if not self.rotate_with_odom(action.value * math.pi / 180):
@@ -772,7 +768,6 @@ class AutoDockStateMachine(AutoDockServer):
         if mode == DockMode.MODE_CHARGE:
             return True
 
-        self.brake(False)
         if go_out_dock[0].value > 0:
             self.turn_off_back_scan_safety(True)
             self.turn_off_front_scan_safety(False)

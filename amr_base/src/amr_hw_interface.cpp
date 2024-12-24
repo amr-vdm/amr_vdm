@@ -255,7 +255,7 @@ namespace amr_base
                     joint_positions_[i] += sktcpclient_fx3u_.convertValue2Radian(encoder_ticks_prev[i], encoder_ticks_[i], MR_encoder_resolution_ , gear_ratio_);
                     joint_velocities_[i] = sktcpclient_fx3u_.convertValue2Velocity(speeds[i], gear_ratio_);
                 } else if (operating_mode[i] == MOTOR_MODE.SLIDER) {
-                    joint_positions_[i] = sktcpclient_fx3u_.convertPulse2Meter(encoder_ticks_[i], MR_encoder_resolution_ , gear_ratio_ * gear_ratio_pinion, pinion_gear_radius, rack_pinion_gear_efficiency);
+                    joint_positions_[i] = sktcpclient_fx3u_.convertPulse2Meter(encoder_ticks_[i], MS_encoder_resolution_ , gear_ratio_ * gear_ratio_pinion, pinion_gear_radius, rack_pinion_gear_efficiency);
                     joint_velocities_[i] = sktcpclient_fx3u_.convertValue2Velocity(speeds[i], gear_ratio_ * gear_ratio_pinion) * pinion_gear_radius;
                 } else {
                     ROS_ERROR("Operating mode is Unknown, please check!");

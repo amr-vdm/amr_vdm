@@ -31,7 +31,9 @@ class BackScannerSafety():
     def turn_off_back_safety_callback(self, msg:Bool):
         self.is_turn_off_ = msg.data
         if msg.data:
-            rospy.loginfo("/back_safety_status: Turn off back safety scanner!")
+            rospy.loginfo("/back_safety_status: Disable obstacle detector!")
+        else:
+            rospy.loginfo("/back_safety_status: Enable obstacle detector!")
 
     def back_safety_state_callback(self, msg: OutputPathsMsg):
         
@@ -48,9 +50,9 @@ class BackScannerSafety():
         if obstacle_state != self.prev_obstacle_state_:
             if not self.is_pause_:
                 if obstacle_state == SafetyStatus.PROTECTED:
-                    rospy.logwarn("/back_safety_status: Detect obstacle!")            
+                    rospy.logwarn_throttle(1.0, "/back_safety_status: Detect obstacle!")            
                 else:
-                    rospy.loginfo("/back_safety_status: No obstacle in field.")
+                    rospy.loginfo_throttle(1.0, "/back_safety_status: No obstacle in field.")
 
             safety = SafetyStatusStamped()
             safety.header.frame_id = "back_laser_link"

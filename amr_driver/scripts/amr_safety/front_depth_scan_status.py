@@ -33,7 +33,9 @@ class FrontDepthScannerSafety():
     def turn_off_front_depth_scanner(self, msg:Bool):
         self.is_turn_off_ = msg.data
         if msg.data:
-            rospy.loginfo("/front_depth_scan_status: Turn off front depth scanner!")
+            rospy.loginfo("/front_depth_scan_status: Disable obstacle detector!")
+        else:
+            rospy.loginfo("/front_depth_scan_status: Enable obstacle detector!")
 
     def front_depth_scan_callback(self, msg: Int16):
 
@@ -48,9 +50,9 @@ class FrontDepthScannerSafety():
         if obstacle_state != self.prev_obstacle_state_:
             if not self.is_pause_:
                 if obstacle_state == SafetyStatus.PROTECTED:
-                    rospy.logwarn("/front_depth_scan_status: Detect obstacle!")            
+                    rospy.logwarn_throttle(1.0, "/front_depth_scan_status: Detect obstacle!")            
                 else:
-                    rospy.loginfo("/front_depth_scan_status: No obstacle in field.")
+                    rospy.loginfo_throttle(1.0, "/front_depth_scan_status: No obstacle in field.")
 
             safety = SafetyStatusStamped()
             safety.header.frame_id = "front_camera_depth_frame"

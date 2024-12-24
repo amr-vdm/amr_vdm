@@ -32,7 +32,9 @@ class FrontScannerSafety():
     def turn_off_front_safety_callback(self, msg:Bool):
         self.is_turn_off_ = msg.data
         if msg.data:
-            rospy.loginfo("/front_safety_status: Turn off front safety scanner!")
+            rospy.loginfo("/front_safety_status: Disable obstacle detector!")
+        else:
+            rospy.loginfo("/front_safety_status: Enable obstacle detector!")
 
     def front_safety_state_callback(self, msg: OutputPathsMsg):
 
@@ -51,10 +53,10 @@ class FrontScannerSafety():
         if obstacle_state != self.prev_obstacle_state_:
             if not self.is_pause_:
                 if obstacle_state == SafetyStatus.PROTECTED:
-                    rospy.logwarn("/front_safety_status: Detect obstacle!")
+                    rospy.logwarn_throttle(1.0, "/front_safety_status: Detect obstacle!")
                     
                 elif obstacle_state == SafetyStatus.NORMAL:
-                    rospy.loginfo("/front_safety_status: No obstacle in field.")
+                    rospy.loginfo_throttle(1.0, "/front_safety_status: No obstacle in field.")
 
             safety = SafetyStatusStamped()
             safety.header.frame_id = "front_laser_link"
