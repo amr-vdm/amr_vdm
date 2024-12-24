@@ -22,7 +22,11 @@
   <node name="amr_free_fleet_client_node" pkg="free_fleet_client_ros1"
         type="free_fleet_client_ros1" respawn="true" output="screen">
         <param name="fleet_name" type="string" value="amr_tp3"/>
+<<<<<<< HEAD
         <param name="robot_name" type="string" value="amr002"/>
+=======
+        <param name="robot_name" type="string" value="amr001"/>
+>>>>>>> 667d1bdad7b581334b7e6a27b3216671437cf8f7
         <param name="level_name" type="string" value="L1"/>
         <param name="wait_for_intialpose" type="bool" value="true"/>
         <param name="wait_timeout" type="double" value="10.0"/>

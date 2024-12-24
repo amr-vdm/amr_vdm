@@ -1,10 +1,18 @@
 <launch>
+<<<<<<< HEAD
   <arg name="front_serial_no"           default="242322073756"/>
+=======
+  <arg name="front_serial_no"           default="242522073015"/>
+>>>>>>> 667d1bdad7b581334b7e6a27b3216671437cf8f7
   <arg name="front_usb_port_id"         default="2-1"/>
   <arg name="use_front_camera"          default="true"/>
   <arg name="front_camera"              default="front_camera"/>
   <arg name="front_camera_tf_prefix"    default="$(arg front_camera)"/>
+<<<<<<< HEAD
   <arg name="back_serial_no"            default="242522072539"/>
+=======
+  <arg name="back_serial_no"            default="244222074211"/>
+>>>>>>> 667d1bdad7b581334b7e6a27b3216671437cf8f7
   <arg name="back_usb_port_id"          default="2-2"/>
   <arg name="use_back_camera"           default="true"/>
   <arg name="back_camera"               default="back_camera"/>
