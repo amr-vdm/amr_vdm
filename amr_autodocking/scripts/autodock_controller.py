@@ -730,6 +730,7 @@ class AutoDockStateMachine(AutoDockServer):
         return True
 
     def cmd_slider_mortor(self, mode: int, timeout=20.0) -> bool:
+        self.publish_velocity()
         if mode == DockMode.MODE_PICKUP:
             self.set_state(DockState.SLIDER_GO_OUT, "Running!")
             cmd_slider = self.autodock_const_.OUT
