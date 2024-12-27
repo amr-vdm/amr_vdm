@@ -1,0 +1,1 @@
+# rosrun robot_upstart install amr_base/launch/bringup.launch --job amr-vdm --user amr --logdir /home/amr/catkin_ws/src/amr_vdm/amr_base/logs --setup ~/catkin_ws/devel/setup.bash --symlink
