@@ -347,7 +347,7 @@ class AutoDockServer:
             x, y, yaw    = utils.get_2d_pose(laser_tf)
             x1, y1, yaw1 = utils.get_2d_pose(tag_tf)
             
-            dx, dy = (x, y) if abs(x - x1) <= 0.03 and abs(y - y1) <= 0.03 else (x1, y1)
+            dx, dy = (x, y) if abs(x - x1) <= 0.03 and abs(y - y1) <= 0.02 else (x1, y1)
             dyaw = min(yaw, yaw1, key=abs)
         
         elif tag_tf is not None:
@@ -358,7 +358,7 @@ class AutoDockServer:
         
         else: raise ValueError("Can not detect all frame!")
 
-        return dx, dy, utils.clamp(dyaw, -0.17, 0.17)
+        return dx, dy, utils.clamp(dyaw, -0.26, 0.26)
 
     def pid_controller(self, dis_y):
         error = dis_y - self.last_error

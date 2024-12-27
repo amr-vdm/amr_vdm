@@ -510,6 +510,7 @@ class AutoDockStateMachine(AutoDockServer):
                         w = utils.clamp(angle, -0.1, 0.1)
 
                         v = sign * self.cfg.max_x_pid_lastmile
+                        prev_time = time_now
 
                 if (
                     self.cart_sensor_state_ == (1, 1)
@@ -529,7 +530,6 @@ class AutoDockStateMachine(AutoDockServer):
                         w = 0.02
 
                 self.publish_velocity(v, w)
-                prev_time = time_now
             self.rate_.sleep()
 
     # ============> MAIN RUN <============#
