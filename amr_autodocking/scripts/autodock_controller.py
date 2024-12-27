@@ -119,13 +119,17 @@ class AutoDockStateMachine(AutoDockServer):
                 self.reset()
                 self.set_state(DockState.ERROR, "/autodock_controller: Undock failed!")
                 return False
-            
+        
         if mode == DockMode.MODE_CHARGE:
             self.enable_line_detector("front", True)
 
         else:
             self.enable_line_detector("back", True)
             if mode == DockMode.MODE_PICKUP:
+                # Custom for robot head to dock
+                if not self.goInDock(go_in_dock):
+                    return False
+                
                 self.update_line_extraction_param()
                 self.enable_apriltag_detector("back", True)
                 self.tag_frame_ = self.get_tag_frame("back", tag_names)
@@ -140,9 +144,9 @@ class AutoDockStateMachine(AutoDockServer):
                         return False
                     self.enable_apriltag_detector("front", False)
 
-        # Custom for robot head to dock
-        if not self.goInDock(go_in_dock):
-            return False
+                # Custom for robot head to dock
+                if not self.goInDock(go_in_dock):
+                    return False
 
         # Reset some needed values when start docking
         self.reset_all()
@@ -314,9 +318,9 @@ class AutoDockStateMachine(AutoDockServer):
                 return False
 
             else:
-                dock_laser_tf = self.get_tf(self.cfg.first_frame)
+                dock_laser_tf = self.get_tf(self.cfg.first_frame, transform_tolerance=0.1)
                 if self.tag_frame_:
-                    dock_tag_tf = self.get_tf(self.tag_frame_)
+                    dock_tag_tf = self.get_tf(self.tag_frame_, transform_tolerance=0.1)
                 else:
                     dock_tag_tf = None
 
@@ -722,7 +726,6 @@ class AutoDockStateMachine(AutoDockServer):
         return True
 
     def goInDock(self, go_in_dock: List[DockParam]):
-        self.brake(False)
         for action in go_in_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
                 if not self.rotate_with_odom(action.value * math.pi / 180):

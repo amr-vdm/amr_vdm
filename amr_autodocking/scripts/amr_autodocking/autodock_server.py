@@ -512,27 +512,17 @@ class AutoDockServer:
 
         try:
             tag_detections = rospy.wait_for_message(
-                topic, AprilTagDetectionArray, timeout=1.0
-            )
-
+                topic, AprilTagDetectionArray, timeout=1.0)
+            
             if tag_detections is not None:
                 tags = tag_detections.detections
-
                 min_distance = 100
                 tag_name = ""
 
                 if len(tag_names) > 0:
                     for tag in tags:
-                        if f"tag_frame_{tag.id[0]}" in tag_names:
-                            bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
-                            x, y, yaw = utils.get_2d_pose(bot2dock)
-                            distance = math.hypot(x, y)
-
-                            if distance < min_distance:
-                                tag_name = f"tag_frame_{tag.id[0]}"
-                                min_distance = distance
-                else:
-                    for tag in tags:
+                        if f"tag_frame_{tag.id[0]}" not in tag_names:
+                            continue
                         bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
                         x, y, yaw = utils.get_2d_pose(bot2dock)
                         distance = math.hypot(x, y)
@@ -760,7 +750,8 @@ class AutoDockServer:
         self.cmd_vel_pub_.publish(msg)
 
     def get_tf(
-        self, target_link=None, ref_link=None, target_time=None, print_out=True
+        self, target_link=None, ref_link=None, target_time=None,
+        print_out=True, transform_tolerance=0.5
     ) -> np.ndarray:
         """
         This will provide the transformation of the marker,
@@ -778,7 +769,7 @@ class AutoDockServer:
         try:
             return utils.get_mat_from_transfrom_msg(
                 self.__tfBuffer.lookup_transform(
-                    ref_link, target_link, target_time, rospy.Duration(self.cfg.tf_expiry)
+                    ref_link, target_link, target_time, rospy.Duration(transform_tolerance)
                 )
             )
         except (
