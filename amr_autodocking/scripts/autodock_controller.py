@@ -23,7 +23,6 @@ import amr_autodocking.autodock_utils as utils
 from amr_autodocking.autodock_server import AutodockConfig, AutoDockServer
 from amr_autodocking.autodock_utils import DockState
 from amr_msgs.msg import DockLimit, DockMode, DockParam
-from apriltag_ros.msg import AprilTagDetectionArray
 
 
 class AutoDockStateMachine(AutoDockServer):
@@ -81,9 +80,6 @@ class AutoDockStateMachine(AutoDockServer):
         """
         rospy.loginfo(f"/autodock_controller: Start autodock! Will attempt with {self.cfg.retry_count} retry!")
 
-        # Reset before start autodocking
-        self.reset_all()
-
         if self.cfg.debug_mode:
             go_in_dock_debug = ""
             for i in range(len(go_in_dock)):
@@ -112,6 +108,8 @@ class AutoDockStateMachine(AutoDockServer):
             print(f"* go_in_dock: {go_in_dock_debug}")
             print(f"* go_out_dock: {go_out_dock_debug}")
 
+        self.brake(False)
+
         if mode == DockMode.MODE_UNDOCK:
             if self.goOutDock(mode, go_out_dock):
                 self.reset()
@@ -121,10 +119,33 @@ class AutoDockStateMachine(AutoDockServer):
                 self.reset()
                 self.set_state(DockState.ERROR, "/autodock_controller: Undock failed!")
                 return False
+            
+        if mode == DockMode.MODE_CHARGE:
+            self.enable_line_detector("front", True)
+
+        else:
+            self.enable_line_detector("back", True)
+            if mode == DockMode.MODE_PICKUP:
+                self.update_line_extraction_param()
+                self.enable_apriltag_detector("back", True)
+                self.tag_frame_ = self.get_tag_frame("back", tag_names)
+
+            elif mode == DockMode.MODE_DROPOFF:
+                self.update_line_extraction_param(self.autodock_const_.DROPOFF)
+                self.update_polygon_param(self.autodock_const_.DROPOFF)
+                self.enable_apriltag_detector("front", True)
+                tag_frame = self.get_tag_frame("front", tag_names)
+                if tag_frame is not None:
+                    if not self.correct_to_front_dock(tag_frame):
+                        return False
+                    self.enable_apriltag_detector("front", False)
 
         # Custom for robot head to dock
         if not self.goInDock(go_in_dock):
             return False
+
+        # Reset some needed values when start docking
+        self.reset_all()
 
         is_dock_limit = True
         if dock_limit.rotate_angle == 0 and dock_limit.rotate_orientation == 0:
@@ -133,57 +154,6 @@ class AutoDockStateMachine(AutoDockServer):
             dock_limit.rotate_orientation = 0
             is_dock_limit = False
 
-        if mode == DockMode.MODE_CHARGE:
-            self.enable_line_detector("front", True)
-
-        else:
-            self.enable_line_detector("back", True)
-            if mode == DockMode.MODE_PICKUP:
-                self.update_line_extraction_param()
-                self.enable_apriltag_detector(True)
-
-                try:
-                    tag_detections = rospy.wait_for_message(
-                        "/back_camera/tag_detections", AprilTagDetectionArray, timeout=1.0
-                    )
-
-                    if tag_detections is not None:
-                        tags = tag_detections.detections
-
-                        min_distance = 100
-                        tag_name = ""
-
-                        if len(tag_names) > 0:
-                            for tag in tags:
-                                if f"tag_frame_{tag.id[0]}" in tag_names:
-                                    bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
-                                    x, y, yaw = utils.get_2d_pose(bot2dock)
-                                    distance = math.hypot(x, y)
-
-                                    if distance < min_distance:
-                                        tag_name = f"tag_frame_{tag.id[0]}"
-                                        min_distance = distance
-                        else:
-                            for tag in tags:
-                                bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
-                                x, y, yaw = utils.get_2d_pose(bot2dock)
-                                distance = math.hypot(x, y)
-
-                                if distance < min_distance:
-                                    tag_name = f"tag_frame_{tag.id[0]}"
-                                    min_distance = distance
-
-                    if tag_name != "":
-                        self.tag_frame_ = tag_name
-                    else:
-                        self.enable_apriltag_detector(False)
-                        self.tag_frame_ = None
-                except Exception as e:
-                    print(e)
-
-            elif mode == DockMode.MODE_DROPOFF:
-                self.update_line_extraction_param(self.autodock_const_.DROPOFF)
-                self.update_polygon_param(self.autodock_const_.DROPOFF)
 
         while True:
             if (
@@ -344,9 +314,9 @@ class AutoDockStateMachine(AutoDockServer):
                 return False
 
             else:
-                dock_laser_tf = self.get_tf(self.cfg.first_frame, transform_tolerance=0.1)
+                dock_laser_tf = self.get_tf(self.cfg.first_frame)
                 if self.tag_frame_:
-                    dock_tag_tf = self.get_tf(self.tag_frame_, transform_tolerance=0.1)
+                    dock_tag_tf = self.get_tf(self.tag_frame_)
                 else:
                     dock_tag_tf = None
 
@@ -432,7 +402,7 @@ class AutoDockStateMachine(AutoDockServer):
                     rospy.logwarn("/autodock_controller: BackLaser is out dropoff dock, it's wrong. Please check!")
                     flag = False  # Reset flag for calculate total time
 
-                dock_tf = self.get_tf(self.cfg.parallel_frame, transform_tolerance=0.1)
+                dock_tf = self.get_tf(self.cfg.parallel_frame)
                 if dock_tf is None:
                     return False
 
@@ -726,17 +696,17 @@ class AutoDockStateMachine(AutoDockServer):
             if not self.move_with_odom(0.04, 0.055, 0.15):
                 return False
 
+        self.brake(True)
         self.print_success("Completed!")
         return True
 
     def cmd_slider_mortor(self, mode: int, timeout=20.0) -> bool:
-        self.publish_velocity()
         if mode == DockMode.MODE_PICKUP:
             self.set_state(DockState.SLIDER_GO_OUT, "Running!")
             cmd_slider = self.autodock_const_.OUT
             sensor_order = 1
             sensor_check = 0
-            self.enable_apriltag_detector(False)
+            self.enable_apriltag_detector("back", False)
         elif mode == DockMode.MODE_DROPOFF:
             self.set_state(DockState.SLIDER_GO_IN, "Running!")
             cmd_slider = self.autodock_const_.IN
@@ -752,6 +722,7 @@ class AutoDockStateMachine(AutoDockServer):
         return True
 
     def goInDock(self, go_in_dock: List[DockParam]):
+        self.brake(False)
         for action in go_in_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
                 if not self.rotate_with_odom(action.value * math.pi / 180):
@@ -769,6 +740,7 @@ class AutoDockStateMachine(AutoDockServer):
         if mode == DockMode.MODE_CHARGE:
             return True
 
+        self.brake(False)
         if go_out_dock[0].value > 0:
             self.turn_off_back_scan_safety(True)
             self.turn_off_front_scan_safety(False)

@@ -32,6 +32,7 @@ from std_msgs.msg import Bool, Int16, Empty
 from amr_autodocking.msg import AutoDockingAction
 from amr_autodocking.msg import AutoDockingGoal, AutoDockingResult
 from amr_msgs.msg import SliderSensorStamped, DockLimit, DockMode, DockParam
+from apriltag_ros.msg import AprilTagDetectionArray
 from tf.transformations import euler_from_quaternion
 from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
@@ -365,6 +366,53 @@ class AutoDockServer:
         self.last_error = dis_y
 
         return angle
+    
+    def correct_to_front_dock(self, dock_frame):
+        pose_list = []
+        check_yaw_counter = 0
+        check_y_counter = 0
+
+        while not rospy.is_shutdown():
+            if self.check_cancel():
+                return False
+            elif self.do_pause():
+                pass
+            else:
+                dock_tf = self.get_tf(dock_frame)
+                if dock_tf is None:
+                    rospy.logerr(f"/autodock_controller: Can not detect dock frame: {dock_frame}")
+
+                dock_pose = utils.get_2d_pose(dock_tf)
+                if len(pose_list) < self.cfg.predock_tf_samples:
+                    pose_list.append(dock_pose)
+                    self.rate_.sleep()
+                    continue
+
+                avg_pose = utils.avg_2d_poses(pose_list)
+                pose_list = []
+
+                x, y, yaw = utils.flip_base_frame(avg_pose)
+
+                # Check yaw
+                if (check_yaw_counter < 2) and (abs(yaw) > self.cfg.yaw_predock_tolerance):
+                    if not self.rotate_with_odom(yaw):
+                        return False
+                    check_yaw_counter += 1
+                    self.rate_.sleep()
+                    continue
+
+                if (check_y_counter < 3) and (abs(y) > 0.1):
+                    if not self.correct_robot(y, True, 90):
+                        return False
+                    check_y_counter += 1
+                    check_yaw_counter = 0
+                    self.rate_.sleep()
+                    continue
+
+                return True
+
+            self.rate_.sleep()
+
 
     def correct_robot(
         self, offset, front_dock: bool = False, rotate_angle=30, rotate_orientation=0
@@ -453,11 +501,64 @@ class AutoDockServer:
                 and self.rotate_with_odom(-rot_angle)
             )
         
+    def get_tag_frame(self, camera_name:str, tag_names):
+        """
+        * `camera_name`: "front" or "back" is available.
+        """
+        if camera_name == "front":
+            topic = "/front_camera/tag_detections"
+        else:
+            topic = "/back_camera/tag_detections"
 
-    def enable_apriltag_detector(self, data):
         try:
-            self.back_apriltag_detector_cli_.call(data)
-            self.front_apriltag_detector_cli_.call(not data)
+            tag_detections = rospy.wait_for_message(
+                topic, AprilTagDetectionArray, timeout=1.0
+            )
+
+            if tag_detections is not None:
+                tags = tag_detections.detections
+
+                min_distance = 100
+                tag_name = ""
+
+                if len(tag_names) > 0:
+                    for tag in tags:
+                        if f"tag_frame_{tag.id[0]}" in tag_names:
+                            bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
+                            x, y, yaw = utils.get_2d_pose(bot2dock)
+                            distance = math.hypot(x, y)
+
+                            if distance < min_distance:
+                                tag_name = f"tag_frame_{tag.id[0]}"
+                                min_distance = distance
+                else:
+                    for tag in tags:
+                        bot2dock = self.get_tf(f"tag_frame_{tag.id[0]}")
+                        x, y, yaw = utils.get_2d_pose(bot2dock)
+                        distance = math.hypot(x, y)
+
+                        if distance < min_distance:
+                            tag_name = f"tag_frame_{tag.id[0]}"
+                            min_distance = distance
+
+            if tag_name != "":
+                return tag_name
+            else:
+                self.enable_apriltag_detector(camera_name, False)
+                return None
+        except Exception as e:
+            return None
+        
+
+    def enable_apriltag_detector(self, camera_name:str, data):
+        """
+        * `camera_name`: "front" or "back" is available.
+        """
+        try:
+            if camera_name == "front":
+                self.front_apriltag_detector_cli_.call(data)
+            else:
+                self.back_apriltag_detector_cli_.call(data)
             rospy.sleep(1.0)
             return True
         except rospy.ServiceException as e:
@@ -659,8 +760,7 @@ class AutoDockServer:
         self.cmd_vel_pub_.publish(msg)
 
     def get_tf(
-        self, target_link=None, ref_link=None,
-        target_time=None, print_out=True, transform_tolerance=0.5
+        self, target_link=None, ref_link=None, target_time=None, print_out=True
     ) -> np.ndarray:
         """
         This will provide the transformation of the marker,
@@ -678,7 +778,7 @@ class AutoDockServer:
         try:
             return utils.get_mat_from_transfrom_msg(
                 self.__tfBuffer.lookup_transform(
-                    ref_link, target_link, target_time, rospy.Duration(transform_tolerance)
+                    ref_link, target_link, target_time, rospy.Duration(self.cfg.tf_expiry)
                 )
             )
         except (

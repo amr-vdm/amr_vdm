@@ -3,7 +3,7 @@
 
       <include file="$(find amr_autodocking)/launch/autodocking.launch"/>
       <include file="$(find amr_base)/launch/image_proc.launch"/>
-      <include file="$(find ira_laser_tools)/launch/laserscan_multi_merger.launch"/>
+      <!-- <include file="$(find ira_laser_tools)/launch/laserscan_multi_merger.launch"/> -->
 
       <node name="PC_write_PLC" pkg="amr_driver" type="PC_WRITE_PLC.py" 
             respawn="true" output="screen" ns="$(arg namespace)">
