@@ -32,7 +32,17 @@ standalone_tags:
     {id: 7, size: 0.042, name: tag_frame_7},
     {id: 8, size: 0.042, name: tag_frame_8},
     {id: 9, size: 0.042, name: tag_frame_9},
-
+    {id: 10, size: 0.042, name: tag_frame_10},
+    {id: 11, size: 0.042, name: tag_frame_11},
+    {id: 12, size: 0.042, name: tag_frame_12},
+    {id: 13, size: 0.042, name: tag_frame_13},
+    {id: 14, size: 0.042, name: tag_frame_14},
+    {id: 15, size: 0.042, name: tag_frame_15},
+    {id: 16, size: 0.042, name: tag_frame_16},
+    {id: 17, size: 0.042, name: tag_frame_17},
+    {id: 18, size: 0.042, name: tag_frame_18},
+    {id: 19, size: 0.042, name: tag_frame_19},
+    {id: 20, size: 0.042, name: tag_frame_20},
   ]
 # Tag bundle definitions
 # Remarks
