@@ -4,7 +4,7 @@ import rospy
 from sensor_msgs.msg import CameraInfo
 from std_srvs.srv import SetBool, Empty
 from std_msgs.msg import Bool
-import dynamic_reconfigure.client as dyncli
+import dynamic_reconfigure.client as dc
 
 
 class CheckCameraConnection:
@@ -28,11 +28,13 @@ class CheckCameraConnection:
         self.reset_front_camera_.wait_for_service()
         rospy.loginfo("/check_camera_connection: Connected to /front_camera/realsense2_camera/reset service.")
 
-        self.enable_emitter_dyncli_ = dyncli.Client("/back_camera/stereo_module")
+        self.back_emitter_  = dc.Client("/back_camera/stereo_module")
+        self.front_emitter_ = dc.Client("/front_camera/stereo_module")
 
-    def disable_back_camera_emitter(self):
+    def disable_camera_emitter(self):
         config = {'emitter_enabled': 0}
-        self.enable_emitter_dyncli_.update_configuration(config)
+        self.back_emitter_.update_configuration(config)
+        self.front_emitter_.update_configuration(config)
 
     def back_camera_finished_cb(self, msg: Bool):
         if msg.data:
@@ -48,7 +50,7 @@ class CheckCameraConnection:
 
             if self.back_camera_status_ and self.front_camera_status_:
                 self.camera_finished_pub_.publish(True)
-                self.disable_back_camera_emitter()
+                self.disable_camera_emitter()
 
     def front_camera_finished_cb(self, msg: Bool):
         if msg.data:                    
@@ -63,7 +65,7 @@ class CheckCameraConnection:
             
             if self.back_camera_status_ and self.front_camera_status_:
                 self.camera_finished_pub_.publish(True)
-                self.disable_back_camera_emitter()
+                self.disable_camera_emitter()
 
 
 if __name__ == "__main__":

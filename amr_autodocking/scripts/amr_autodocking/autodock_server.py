@@ -431,10 +431,12 @@ class AutoDockServer:
         if rotate_orientation == self.autodock_const_.CCW:
             if (front_dock and offset > 0) or (not front_dock and offset < 0):
                 dir = -1
+                rotate_angle = 90
         elif rotate_orientation == self.autodock_const_.CW:
             ori = -1
             if (front_dock and offset < 0) or (not front_dock and offset > 0):
                 dir = -1
+                rotate_angle = 90
         elif (front_dock and offset > 0) or (not front_dock and offset < 0):
             ori = -1
 

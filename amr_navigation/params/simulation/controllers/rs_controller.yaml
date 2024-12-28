@@ -134,15 +134,16 @@ RotationShimController:
     dt_ref: 0.3                              
     dt_hysteresis: 0.1                       
     global_plan_overwrite_orientation: true
-    allow_init_with_backwards_motion: false  
-    max_global_plan_lookahead_dist: 1.5 #3.0 
+    allow_init_with_backwards_motion: true  
+    max_global_plan_lookahead_dist: 1.5 #3.0
+    max_global_plan_lookbackward_dist: 5.0
     force_reinit_new_goal_dist: 1.0
     # force_reinit_new_goal_angular:           
     feasibility_check_no_poses: 5 
     # feasibility_check_lookahead_distance:           
     exact_arc_length: false                  
     publish_feedback: false
-    control_look_ahead_poses: 1  
+    control_look_ahead_poses: 1
     prevent_look_ahead_poses_near_goal: 0
     visualize_with_time_as_z_axis_scale: 0.0              
     
@@ -151,8 +152,8 @@ RotationShimController:
     via_points_ordered: false                
 
     # Robot
-    max_vel_x: 0.75
-    max_vel_x_backwards: 0.25                
+    max_vel_x: 0.8
+    max_vel_x_backwards: 0.3                
     max_vel_theta: 0.6                       
     acc_lim_x: 0.101 #2.0                          
     acc_lim_theta: 0.101 #1.0                      
@@ -174,7 +175,8 @@ RotationShimController:
     acc_lim_y: 0.0                           
 
     # Goal tolerance
-    xy_goal_tolerance: 0.05                  
+    xy_goal_tolerance: 0.05
+    xy_reached_tolerance: 0.1  # Should be small (< 0.2) 
     yaw_goal_tolerance: 0.05                 
     free_goal_vel: false      # Allow the robot's velocity to be nonzero for planning purposes 
                               # (the robot can arrive at the goal with max speed)                  
@@ -185,7 +187,7 @@ RotationShimController:
     min_obstacle_dist: 0.015 # 0.481 Minimum desired separation from obstacles
     inflation_dist: 0.02 # Buffer zone around obstacles with non-zero penalty costs 
                         # (should be larger than min_obstacle_dist in order to take effect)
-    dynamic_obstacle_inflation_dist: 0.25 # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
+    dynamic_obstacle_inflation_dist: 0.25  # Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs 
                                           # (should be larger than min_obstacle_dist in order to take effect)     
     include_dynamic_obstacles: true         
     include_costmap_obstacles: true          
@@ -203,16 +205,16 @@ RotationShimController:
     no_outer_iterations: 4
     optimization_activate: true
     optimization_verbose: false          
-    penalty_epsilon: 0.1  
+    penalty_epsilon: 0.1
     weight_max_vel_x: 1.0    
-    weight_max_vel_y: 1.0
+    weight_max_vel_y: 0.0
     weight_max_vel_theta: 1.0         
     weight_acc_lim_x: 10.0 #1.0
-    weight_acc_lim_y: 1.0     
+    weight_acc_lim_y: 0.0     
     weight_acc_lim_theta: 10.0 #1.0  
     weight_kinematics_nh: 3000.0   # 10000.0  
     weight_kinematics_forward_drive: 10000.0
-    weight_kinematics_turning_radius: 1.0
+    weight_kinematics_turning_radius: 0.0
     weight_optimaltime: 10.0
     weight_shortest_path: 0.0   # Optimization weight for contracting the trajectory w.r.t. path length 
     weight_obstacle: 1000.0
@@ -228,7 +230,7 @@ RotationShimController:
     # enable_homotopy_class_planning: true    
     enable_multithreading: true              
     # simple_exploration: false               
-    max_number_classes: 4
+    max_number_classes: 2
     # max_number_plans_in_current_class:                
     selection_cost_hysteresis: 1.0 
     selection_prefer_initial_plan: 1.0
@@ -248,4 +250,5 @@ RotationShimController:
     # Recovery
     shrink_horizon_backup: true           
     oscillation_recovery: true
+    oscillation_v_eps: 0.25
     oscillation_recovery_min_duration: 10.0
