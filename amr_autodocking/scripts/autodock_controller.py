@@ -318,9 +318,9 @@ class AutoDockStateMachine(AutoDockServer):
                 return False
 
             else:
-                dock_laser_tf = self.get_tf(self.cfg.first_frame, transform_tolerance=0.1)
+                dock_laser_tf = self.get_tf(self.cfg.first_frame, transform_tolerance=0.3)
                 if self.tag_frame_:
-                    dock_tag_tf = self.get_tf(self.tag_frame_, transform_tolerance=0.1)
+                    dock_tag_tf = self.get_tf(self.tag_frame_, transform_tolerance=0.3)
                 else:
                     dock_tag_tf = None
 
@@ -594,7 +594,7 @@ class AutoDockStateMachine(AutoDockServer):
                     if (mode == DockMode.MODE_DROPOFF):
                         dock_tf = self.get_tf(self.cfg.parallel_frame)
                         if dock_tf is None:
-                            rospy.logerr(f"/autodock_controller: Can not detect all frame!")
+                            rospy.logerr(f"/autodock_controller: Can not detect {self.cfg.parallel_frame}!")
                             self.error_pub_.publish(self.autodock_const_.TF_ERROR)
                             return False
                         dock_pose = utils.get_2d_pose(dock_tf)

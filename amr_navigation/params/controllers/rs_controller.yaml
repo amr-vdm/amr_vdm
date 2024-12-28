@@ -175,7 +175,7 @@ RotationShimController:
 
     # Goal tolerance
     xy_goal_tolerance: 0.05
-    xy_reached_tolerance: 0.05  # Should be small (< 0.2) 
+    xy_reached_tolerance: 0.1  # Should be small (< 0.2) 
     yaw_goal_tolerance: 0.05                 
     free_goal_vel: false      # Allow the robot's velocity to be nonzero for planning purposes 
                               # (the robot can arrive at the goal with max speed)                  
