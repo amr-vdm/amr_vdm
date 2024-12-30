@@ -379,7 +379,8 @@ class AutoDockServer:
             else:
                 dock_tf = self.get_tf(dock_frame)
                 if dock_tf is None:
-                    rospy.logerr(f"/autodock_controller: Can not detect dock frame: {dock_frame}")
+                    rospy.logerr(f"/autodock_controller: Can not detect {dock_frame}")
+                    return False
 
                 dock_pose = utils.get_2d_pose(dock_tf)
                 if len(pose_list) < self.cfg.predock_tf_samples:
@@ -536,9 +537,9 @@ class AutoDockServer:
                 return tag_name
             else:
                 self.enable_apriltag_detector(camera_name, False)
-                return "unknown_frame"
+                return None
         except Exception as e:
-            return "unknown_frame"
+            return None
         
 
     def enable_apriltag_detector(self, camera_name:str, data):
@@ -763,7 +764,8 @@ class AutoDockServer:
         if ref_link is None:
             ref_link = self.cfg.base_link
         if target_link is None:
-            target_link = self.cfg.last_frame
+            rospy.logerr(f"/autodock_controller: target_link is None")
+            return None
         if target_time is None:
             target_time = rospy.Time.now()
 
