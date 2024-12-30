@@ -116,7 +116,6 @@ class AutoDockServer:
 
         self.cfg = config
         self.run_server = run_server
-        self.autodock_const_ = AutodockConst()
 
         # param check
         assert (
@@ -313,10 +312,10 @@ class AutoDockServer:
         """
         Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if data == self.autodock_const_.PICKUP:
+        if data == AutodockConst.PICKUP:
             self.line_extraction_client.update_configuration(self.pickup_le_params)
 
-        elif data == self.autodock_const_.DROPOFF:
+        elif data == AutodockConst.DROPOFF:
             self.line_extraction_client.update_configuration(self.dropoff_le_params)
         
         else:
@@ -326,10 +325,10 @@ class AutoDockServer:
         """
         Available `data` is PICKUP, DROPOFF or 0(DEFAULT).
         """
-        if data == self.autodock_const_.PICKUP:
+        if data == AutodockConst.PICKUP:
             self.polygon_client.update_configuration(self.pickup_polygon_params)
 
-        elif data == self.autodock_const_.DROPOFF:
+        elif data == AutodockConst.DROPOFF:
             self.polygon_client.update_configuration(self.dropoff_polygon_params)
         
         else:
@@ -428,11 +427,11 @@ class AutoDockServer:
 
         dir = 1
         ori = 1
-        if rotate_orientation == self.autodock_const_.CCW:
+        if rotate_orientation == AutodockConst.CCW:
             if (front_dock and offset > 0) or (not front_dock and offset < 0):
                 dir = -1
                 rotate_angle = 90
-        elif rotate_orientation == self.autodock_const_.CW:
+        elif rotate_orientation == AutodockConst.CW:
             ori = -1
             if (front_dock and offset < 0) or (not front_dock and offset > 0):
                 dir = -1
@@ -839,7 +838,7 @@ class AutoDockServer:
         """
         if times == limit:
             rospy.logerr(f"/autodock_controller: The times of high current exceed {limit}!")
-            self.error_pub_.publish(self.autodock_const_.RETRY_EXCEED)
+            self.error_pub_.publish(AutodockConst.RETRY_EXCEED)
             return False
 
         self.set_state(self.dock_state_, f"Move with odom {forward}m because high motor current!")

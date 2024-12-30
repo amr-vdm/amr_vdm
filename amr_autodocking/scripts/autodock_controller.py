@@ -20,10 +20,9 @@ import math
 from typing import List
 import amr_autodocking.autodock_utils as utils
 
-from amr_autodocking.autodock_server import AutodockConfig, AutoDockServer
+from amr_autodocking.autodock_server import AutodockConfig, AutoDockServer, AutodockConst
 from amr_autodocking.autodock_utils import DockState
 from amr_msgs.msg import DockLimit, DockMode, DockParam
-
 
 class AutoDockStateMachine(AutoDockServer):
     def __init__(
@@ -135,8 +134,8 @@ class AutoDockStateMachine(AutoDockServer):
                 self.tag_frame_ = self.get_tag_frame("back", tag_names)
 
             elif mode == DockMode.MODE_DROPOFF:
-                self.update_line_extraction_param(self.autodock_const_.DROPOFF)
-                self.update_polygon_param(self.autodock_const_.DROPOFF)
+                self.update_line_extraction_param(AutodockConst.DROPOFF)
+                self.update_polygon_param(AutodockConst.DROPOFF)
                 self.enable_apriltag_detector("front", True)
                 tag_frame = self.get_tag_frame("front", tag_names)
                 if tag_frame is not None:
@@ -231,7 +230,7 @@ class AutoDockStateMachine(AutoDockServer):
 
                 elif (rospy.Time.now() - start_time).to_sec() >= timeout:
                     rospy.logerr("/autodock_controller: Slider motor error: Exceed timeout 15s")
-                    self.error_pub_.publish(self.autodock_const_.SLIDER_TIMEOUT)
+                    self.error_pub_.publish(AutodockConst.SLIDER_TIMEOUT)
                     return False
 
                 elif self.slider_sensor_state_[sensor_order] == 1:
@@ -242,7 +241,7 @@ class AutoDockStateMachine(AutoDockServer):
                 elif (rospy.Time.now() - start_time).to_sec() >= timeout_checksensor:
                     if self.slider_sensor_state_[sensor_check] == 1:
                         rospy.logerr("/autodock_controller: Slider motor error: Not working!")
-                        self.error_pub_.publish(self.autodock_const_.SLIDER_ERROR)
+                        self.error_pub_.publish(AutodockConst.SLIDER_ERROR)
                         return False
             self.rate_.sleep()
 
@@ -343,7 +342,7 @@ class AutoDockStateMachine(AutoDockServer):
                 if dock_laser_tf is not None:
                     x_dock_laser = utils.get_2d_pose(dock_laser_tf)[0]
                     if abs(x_dock_laser) < (self.cfg.back_laser_offset + 0.2) and not flag:
-                        self.update_line_extraction_param(self.autodock_const_.PICKUP)
+                        self.update_line_extraction_param(AutodockConst.PICKUP)
                         flag = True
 
                     elif (abs(x_dock_laser) - self.cfg.steer_distance_threshold) < 0:
@@ -384,7 +383,7 @@ class AutoDockStateMachine(AutoDockServer):
                 self.reset_high_current()
                 flag = False
                 self.publish_velocity()
-                self.update_line_extraction_param(self.autodock_const_.DROPOFF)
+                self.update_line_extraction_param(AutodockConst.DROPOFF)
 
                 self.retry_with_high_current(0.4, 1, 2)
                 return False
@@ -393,7 +392,7 @@ class AutoDockStateMachine(AutoDockServer):
                 # Check whether back laser in dock (Depend on distance from center of laser to both side of the dock)
                 if self.left_range_ < 0.3 and self.right_range_ < 0.3:
                     if not flag:
-                        self.update_line_extraction_param(self.autodock_const_.PICKUP)
+                        self.update_line_extraction_param(AutodockConst.PICKUP)
                         start_time = rospy.Time.now()
                         flag = True
                         rospy.loginfo("/autodock_controller: BackLaser is in dropoff dock!")
@@ -477,7 +476,7 @@ class AutoDockStateMachine(AutoDockServer):
 
             else:
                 if not is_setLineExtra:
-                    self.update_line_extraction_param(self.autodock_const_.PICKUP)
+                    self.update_line_extraction_param(AutodockConst.PICKUP)
                     is_setLineExtra = True
 
                 if not flag:
@@ -493,7 +492,7 @@ class AutoDockStateMachine(AutoDockServer):
                     #     continue
                     # else:
                     #     rospy.logerr(f"Maximum retry find dock frame: {self.cfg.last_frame}")
-                    #     self.error_pub_.publish(self.autodock_const_.TF_ERORR)
+                    #     self.error_pub_.publish(AutodockConst.TF_ERORR)
                     #     return False
                     if dock_tf is not None:
                         # count_lost_dock = 0
@@ -595,7 +594,7 @@ class AutoDockStateMachine(AutoDockServer):
                         dock_tf = self.get_tf(self.cfg.parallel_frame)
                         if dock_tf is None:
                             rospy.logerr(f"/autodock_controller: Can not detect {self.cfg.parallel_frame}!")
-                            self.error_pub_.publish(self.autodock_const_.TF_ERROR)
+                            self.error_pub_.publish(AutodockConst.TF_ERROR)
                             return False
                         dock_pose = utils.get_2d_pose(dock_tf)
                     else:
@@ -603,7 +602,7 @@ class AutoDockStateMachine(AutoDockServer):
                             dock_pose = self.get_dock_pose(self.cfg.first_frame, self.tag_frame_)
                         except ValueError as e:
                             rospy.logerr(f"/autodock_controller: {e}")
-                            self.error_pub_.publish(self.autodock_const_.TF_ERROR)
+                            self.error_pub_.publish(AutodockConst.TF_ERROR)
                             return False
 
                     if len(pose_list) < self.cfg.predock_tf_samples:
@@ -642,7 +641,7 @@ class AutoDockStateMachine(AutoDockServer):
 
                                 check_y_counter += 1
                                 check_yaw_counter = 0
-                                self.update_polygon_param(self.autodock_const_.PICKUP)
+                                self.update_polygon_param(AutodockConst.PICKUP)
                                 self.set_state(DockState.PREDOCK, "")
                                 self.rate_.sleep()
                                 continue
@@ -658,7 +657,7 @@ class AutoDockStateMachine(AutoDockServer):
                             continue
 
                         elif mode == DockMode.MODE_PICKUP:
-                            self.update_polygon_param(self.autodock_const_.PICKUP)
+                            self.update_polygon_param(AutodockConst.PICKUP)
                             return True
 
                 self.print_success("Completed!")
@@ -707,13 +706,13 @@ class AutoDockStateMachine(AutoDockServer):
     def cmd_slider_mortor(self, mode: int, timeout=20.0) -> bool:
         if mode == DockMode.MODE_PICKUP:
             self.set_state(DockState.SLIDER_GO_OUT, "Running!")
-            cmd_slider = self.autodock_const_.OUT
+            cmd_slider = AutodockConst.OUT
             sensor_order = 1
             sensor_check = 0
             self.enable_apriltag_detector("back", False)
         elif mode == DockMode.MODE_DROPOFF:
             self.set_state(DockState.SLIDER_GO_IN, "Running!")
-            cmd_slider = self.autodock_const_.IN
+            cmd_slider = AutodockConst.IN
             sensor_order = 0
             sensor_check = 1
         elif mode == DockMode.MODE_CHARGE:

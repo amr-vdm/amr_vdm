@@ -1,3 +1,6 @@
-import math
+class A:
+    A = 1
+    B = 2
 
-print(1/math.tan(math.pi/2))
+
+print(A.A)
