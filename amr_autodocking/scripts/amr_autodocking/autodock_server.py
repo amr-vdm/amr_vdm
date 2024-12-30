@@ -536,9 +536,9 @@ class AutoDockServer:
                 return tag_name
             else:
                 self.enable_apriltag_detector(camera_name, False)
-                return None
+                return "unknown_frame"
         except Exception as e:
-            return None
+            return "unknown_frame"
         
 
     def enable_apriltag_detector(self, camera_name:str, data):
