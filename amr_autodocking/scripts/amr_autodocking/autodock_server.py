@@ -143,7 +143,7 @@ class AutoDockServer:
         self.is_waiting_dock_ = False
         self.slider_sensor_state_ = [0, 0]
         self.cart_sensor_state_ = (0, 0)
-        self.tag_frame_ = ""
+        self.tag_frame_ = None
         self.current_speed_ = Twist()
         self.dock_state_ = DockState.IDLE
         self.start_time_ = rospy.Time.now()
@@ -355,7 +355,7 @@ class AutoDockServer:
         elif laser_tf is not None:
             dx, dy, dyaw = utils.get_2d_pose(laser_tf)
         
-        else: raise ValueError(f"Can not detect {laser_frame} & {tag_frame}!")
+        else: raise ValueError(f"Can not detect laser_frame & tag_frame!")
 
         return dx, dy, utils.clamp(dyaw, -0.26, 0.26)
 
