@@ -25,5 +25,10 @@
         <param name="noise_threshold" value="20"/>
         <param name="laser_scan_topic" value="/front_camera/front_scan_filter"/>
     </node>
+
+    <node name="front_depth_scanner_safety_status" pkg="amr_driver" type="front_depth_scan_status.py" 
+            respawn="true" output="screen" ns="$(arg namespace)">
+            <param name="camera_frame_id" value="front_camera_depth_frame"/>
+      </node>
   
 </launch>
