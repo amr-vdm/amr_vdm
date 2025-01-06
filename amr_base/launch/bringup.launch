@@ -98,7 +98,7 @@
     <include file="$(find amr_base)/launch/other_nodes.launch"/>
 
     <!--===> LAUNCH depthImagetoLaserScan <===-->
-    <include file="$(find amr_base)/launch/depthimage_to_laserscan.launch"/>
+    <!-- <include file="$(find amr_base)/launch/depthimage_to_laserscan.launch"/> -->
 
     <!--pointcloud to laserscan-->
     <!-- <include file="$(find amr_base)/launch/pointcloud_to_laserscan.launch"/> -->

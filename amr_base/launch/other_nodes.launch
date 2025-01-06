@@ -36,11 +36,6 @@
             <param name="speed_at_warninglv2" type="double" value="0.4"/>
       </node>
 
-      <node name="front_depth_scanner_safety_status" pkg="amr_driver" type="front_depth_scan_status.py" 
-            respawn="true" output="screen" ns="$(arg namespace)">
-            <param name="camera_frame_id" value="front_camera_depth_frame"/>
-      </node>
-
       <!-- <node name="test_lk1_auto_navigation" pkg="amr_driver" type="test_lk1_auto_navigation.py" output="screen" ns="$(arg namespace)">
       </node> -->
 
