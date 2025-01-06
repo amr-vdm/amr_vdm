@@ -393,6 +393,8 @@ class AutoDockServer:
 
                 x, y, yaw = utils.flip_base_frame(avg_pose)
 
+                yaw = utils.clamp(yaw, -0.05, 0.05)
+
                 # Check yaw
                 if (check_yaw_counter < 2) and (abs(yaw) > self.cfg.yaw_predock_tolerance):
                     if not self.rotate_with_odom(yaw):
@@ -401,7 +403,7 @@ class AutoDockServer:
                     self.rate_.sleep()
                     continue
 
-                if (check_y_counter < 3) and (abs(y) > 0.1):
+                if (check_y_counter < 3) and (abs(y) > 0.03):
                     if not self.correct_robot(y, True, 90):
                         return False
                     check_y_counter += 1
