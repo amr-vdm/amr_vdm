@@ -52,6 +52,7 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>microstrain_inertial_driver</exec_depend>
   <exec_depend>microstrain-inertial-rqt</exec_depend>
+  <exec_depend>robot_upstart</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
