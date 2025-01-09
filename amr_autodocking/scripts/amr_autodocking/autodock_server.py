@@ -352,9 +352,6 @@ class AutoDockServer:
         elif tag_tf is not None:
             dx, dy, dyaw = utils.get_2d_pose(tag_tf)
         
-        elif laser_tf is not None:
-            dx, dy, dyaw = utils.get_2d_pose(laser_tf)
-        
         else: raise ValueError(f"Can not detect laser_frame & tag_frame!")
 
         return dx, dy, utils.clamp(dyaw, -0.26, 0.26)
