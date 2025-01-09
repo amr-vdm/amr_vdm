@@ -759,6 +759,7 @@ class AutoDockStateMachine(AutoDockServer):
         for action in go_out_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
                 self.set_state(DockState.GO_OUT_DOCK, f"Rotate robot {action.value} degrees!")
+                self.turn_off_back_scan_safety(False)
                 if not self.rotate_with_odom(action.value * math.pi / 180):
                     return False
             elif action.action_type == DockParam.TYPE_MOVE:
