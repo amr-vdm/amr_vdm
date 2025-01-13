@@ -194,7 +194,7 @@ class AutoDockStateMachine(AutoDockServer):
 
             if mode == DockMode.MODE_PICKUP:
                 if not self.retry(self.tag_frame_):
-                    if not self.retry(self.cfg.first_frame):
+                    # if not self.retry(self.cfg.first_frame):
                         break
 
             elif mode == DockMode.MODE_DROPOFF:
