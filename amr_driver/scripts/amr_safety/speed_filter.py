@@ -14,7 +14,7 @@ class SpeedFilter():
         self.max_speed_ = rospy.get_param("~max_speed", 0.7)
         self.velocity_percentage_ = rospy.get_param("~velocity_per", 0.3)
         self.loop_freq_ = 5.0
-        self.velocity_per_ = 0.0
+        self.velocity_per_ = self.velocity_percentage_
         self.speed_limit_lane_ = self.max_speed_
         self.speed_at_field_ = self.max_speed_
         self.current_speed_ = self.max_speed_
@@ -29,10 +29,10 @@ class SpeedFilter():
     def slider_sensor_state_callback(self, msg: SliderSensorStamped):
         if msg.sensor_state.data:
             if msg.sensor_state.data[0] == IN:
-                self.velocity_per_ = 0.0
+                self.velocity_per_ = self.velocity_percentage_
 
             elif msg.sensor_state.data[1] == OUT:
-                self.velocity_per_ = self.velocity_percentage_
+                self.velocity_per_ = 0.0
 
     def speed_limit_lane_callback(self, msg: Float32):
         self.speed_limit_lane_ = round(msg.data,2)
