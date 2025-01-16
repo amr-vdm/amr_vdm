@@ -54,6 +54,7 @@
       <node name="speed_filter" pkg="amr_driver" type="speed_filter.py" 
             respawn="true" output="screen">
             <param name="max_speed" type="double" value="0.8"/>
+            <param name="velocity_per" type="double" value="0.3"/>
       </node>
 
       <!-- <node name="pose_estimate_continous" pkg="amcl_apriltag"
