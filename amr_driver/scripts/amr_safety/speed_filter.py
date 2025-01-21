@@ -11,7 +11,7 @@ OUT = 1
 class SpeedFilter():
 
     def __init__(self):
-        self.max_speed_ = rospy.get_param("~max_speed", 0.7)
+        self.max_speed_ = rospy.get_param("~max_speed", 0.8)
         self.velocity_percentage_ = rospy.get_param("~velocity_per", 0.3)
         self.loop_freq_ = 5.0
         self.velocity_per_ = self.velocity_percentage_
@@ -48,9 +48,9 @@ class SpeedFilter():
     def run(self):
         while not rospy.is_shutdown():
             speed = min(self.speed_limit_lane_, self.speed_at_field_, self.max_speed_) \
-                    + (min(self.speed_limit_lane_, self.speed_at_field_, self.max_speed_) * self.velocity_per_ / 100.0)
+                    + (min(self.speed_limit_lane_, self.speed_at_field_, self.max_speed_) * self.velocity_per_)
             if self.current_speed_ != speed:
-                self.current_speed_ = speed
+                self.current_speed_ = round(speed, 2)
                 self.update_velocity(self.current_speed_)
             
             rospy.sleep(1/self.loop_freq_)
