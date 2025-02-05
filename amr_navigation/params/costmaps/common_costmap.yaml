@@ -32,6 +32,7 @@ obstacle_filter:
   map_topic: /obstacle_filter/map
   global_obtascle_srv_name: /move_base_node/global_costmap/obstacles/set_parameters
   local_obstacle_srv_name: /move_base_node/local_costmap/obstacles/set_parameters
+  obstacle_state_topic: /amr/avoid_obstacles
   enable: true
   max_height_obstacle: 0.25
 
