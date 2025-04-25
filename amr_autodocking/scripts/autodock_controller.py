@@ -24,19 +24,24 @@ from amr_autodocking.autodock_server import AutodockConfig, AutoDockServer, Auto
 from amr_autodocking.autodock_utils import DockState
 from amr_msgs.msg import DockLimit, DockMode, DockParam
 
+
 class AutoDockStateMachine(AutoDockServer):
     def __init__(
         self, config: AutodockConfig, run_server=True, load_rosparam=False, fake_clock=False
     ):
         if fake_clock:
-            rospy.logwarn("/autodock_controller: WARNING!!!! fake clock is in used, Temporary set use_sim_time to true")
+            rospy.logwarn(
+                "/autodock_controller: WARNING!!!! fake clock is in used, Temporary set use_sim_time to true"
+            )
             rospy.set_param("/use_sim_time", True)
 
         rospy.init_node("auto_dock_node")
         rospy.loginfo("/autodock_controller: Initialized auto_dock_node.")
 
         if fake_clock:
-            rospy.logwarn("/autodock_controller: WARNING!!!! fake clock enabled! now disable use_sim_time")
+            rospy.logwarn(
+                "/autodock_controller: WARNING!!!! fake clock enabled! now disable use_sim_time"
+            )
             rospy.set_param("/use_sim_time", False)
 
         self.cfg = config
@@ -77,7 +82,9 @@ class AutoDockStateMachine(AutoDockServer):
         """
         Start Docking Sequence
         """
-        rospy.loginfo(f"/autodock_controller: Start autodock! Will attempt with {self.cfg.retry_count} retry!")
+        rospy.loginfo(
+            f"/autodock_controller: Start autodock! Will attempt with {self.cfg.retry_count} retry!"
+        )
 
         if self.cfg.debug_mode:
             go_in_dock_debug = ""
@@ -111,14 +118,14 @@ class AutoDockStateMachine(AutoDockServer):
 
         if mode == DockMode.MODE_UNDOCK:
             if self.goOutDock(mode, go_out_dock):
-                self.reset()
+                # self.reset()
                 self.set_state(DockState.IDLE, "/autodock_controller: Undock completed!")
                 return True
             else:
-                self.reset()
+                # self.reset()
                 self.set_state(DockState.ERROR, "/autodock_controller: Undock failed!")
                 return False
-        
+
         if mode == DockMode.MODE_CHARGE:
             self.enable_line_detector("front", True)
 
@@ -128,7 +135,7 @@ class AutoDockStateMachine(AutoDockServer):
                 # Custom for robot head to dock
                 if not self.goInDock(go_in_dock):
                     return False
-                
+
                 self.update_line_extraction_param()
                 self.enable_apriltag_detector("back", True)
                 self.tag_frame_ = self.get_tag_frame("back", tag_names)
@@ -157,7 +164,6 @@ class AutoDockStateMachine(AutoDockServer):
             dock_limit.rotate_orientation = 0
             is_dock_limit = False
 
-
         while True:
             if (
                 self.pre_dock(
@@ -171,8 +177,8 @@ class AutoDockStateMachine(AutoDockServer):
                 and self.lastmile_dock(mode)
                 and self.cmd_slider_mortor(mode)
             ):
-                if mode == DockMode.MODE_CHARGE:
-                    self.reset()
+                # if mode == DockMode.MODE_CHARGE:
+                #     self.reset()
                 self.set_state(DockState.IDLE, "/autodock_controller: Autodock completed!")
                 return True
 
@@ -195,13 +201,13 @@ class AutoDockStateMachine(AutoDockServer):
             if mode == DockMode.MODE_PICKUP:
                 if not self.retry(self.tag_frame_):
                     # if not self.retry(self.cfg.first_frame):
-                        break
+                    break
 
             elif mode == DockMode.MODE_DROPOFF:
                 if not self.retry(self.cfg.parallel_frame):
                     break
 
-        self.reset()
+        # self.reset()
         return False
 
     def check_slider_sensor_state(
@@ -331,7 +337,9 @@ class AutoDockStateMachine(AutoDockServer):
                     dock_tf = None
 
                 if dock_tf is None:
-                    rospy.loginfo("/autodock_controller: Steerdock_pickup will return True because lost dock")
+                    rospy.loginfo(
+                        "/autodock_controller: Steerdock_pickup will return True because lost dock"
+                    )
                     return True
 
                 dock_pose = utils.get_2d_pose(dock_tf)
@@ -402,7 +410,9 @@ class AutoDockStateMachine(AutoDockServer):
                             return True
 
                 elif flag:
-                    rospy.logwarn("/autodock_controller: BackLaser is out dropoff dock, it's wrong. Please check!")
+                    rospy.logwarn(
+                        "/autodock_controller: BackLaser is out dropoff dock, it's wrong. Please check!"
+                    )
                     flag = False  # Reset flag for calculate total time
 
                 dock_tf = self.get_tf(self.cfg.parallel_frame)
@@ -542,12 +552,12 @@ class AutoDockStateMachine(AutoDockServer):
         check_yaw_counter = 0
         check_y_counter = 0
 
-        if mode == DockMode.MODE_CHARGE:
-            self.turn_off_front_scan_safety(True)
-            self.turn_off_front_depth_safety(True)
-            self.turn_off_ultrasonic_safety(True)
+        # if mode == DockMode.MODE_CHARGE:
+        #     self.turn_off_front_scan_safety(True)
+        #     self.turn_off_front_depth_safety(True)
+        #     self.turn_off_ultrasonic_safety(True)
 
-        self.turn_off_back_scan_safety(False)
+        # self.turn_off_back_scan_safety(False)
 
         while not rospy.is_shutdown():
             if self.check_cancel():
@@ -558,7 +568,10 @@ class AutoDockStateMachine(AutoDockServer):
                 if mode == DockMode.MODE_CHARGE:
                     dock_tf = self.get_tf(self.cfg.charger_link)
                     if dock_tf is None:
-                        rospy.logerr("/autodock_controller: Can not detect dock frame: %s", self.cfg.charger_link)
+                        rospy.logerr(
+                            "/autodock_controller: Can not detect dock frame: %s",
+                            self.cfg.charger_link,
+                        )
 
                     dock_pose = utils.get_2d_pose(dock_tf)
                     if len(pose_list) < self.cfg.predock_tf_samples:
@@ -590,10 +603,12 @@ class AutoDockStateMachine(AutoDockServer):
                         self.rate_.sleep()
                         continue
                 else:
-                    if (mode == DockMode.MODE_DROPOFF):
+                    if mode == DockMode.MODE_DROPOFF:
                         dock_tf = self.get_tf(self.cfg.parallel_frame)
                         if dock_tf is None:
-                            rospy.logerr(f"/autodock_controller: Can not detect {self.cfg.parallel_frame}!")
+                            rospy.logerr(
+                                f"/autodock_controller: Can not detect {self.cfg.parallel_frame}!"
+                            )
                             self.error_pub_.publish(AutodockConst.TF_ERROR)
                             return False
                         dock_pose = utils.get_2d_pose(dock_tf)
@@ -670,7 +685,7 @@ class AutoDockStateMachine(AutoDockServer):
         self.set_state(DockState.STEER_DOCK, "Running!")
 
         if mode == DockMode.MODE_CHARGE:
-            self.turn_off_front_scan_safety(True)
+            # self.turn_off_front_scan_safety(True)
             if not self.steer_to_charger(self.cfg.max_x_pid_steer, self.cfg.min_x_pid_steer):
                 return False
         else:
@@ -679,9 +694,7 @@ class AutoDockStateMachine(AutoDockServer):
                 if not self.steer_with_pickup(self.cfg.max_x_pid_steer, self.cfg.min_x_pid_steer):
                     return False
             elif mode == DockMode.MODE_DROPOFF:
-                if not self.steer_with_dropoff(
-                    self.cfg.max_x_pid_steer, self.cfg.min_x_pid_steer
-                ):
+                if not self.steer_with_dropoff(self.cfg.max_x_pid_steer, self.cfg.min_x_pid_steer):
                     return False
 
         self.print_success("Completed!")
@@ -743,16 +756,16 @@ class AutoDockStateMachine(AutoDockServer):
             return True
 
         self.brake(False)
-        if go_out_dock[0].value > 0:
-            self.turn_off_back_scan_safety(True)
-            self.turn_off_front_scan_safety(False)
-            self.turn_off_ultrasonic_safety(False)
-            self.turn_off_front_depth_safety(False)
-        else:
-            self.turn_off_front_scan_safety(True)
-            self.turn_off_ultrasonic_safety(True)
-            self.turn_off_front_depth_safety(True)
-            self.turn_off_back_scan_safety(False)
+        # if go_out_dock[0].value > 0:
+        #     self.turn_off_back_scan_safety(True)
+        #     self.turn_off_front_scan_safety(False)
+        #     self.turn_off_ultrasonic_safety(False)
+        #     self.turn_off_front_depth_safety(False)
+        # else:
+        #     self.turn_off_front_scan_safety(True)
+        #     self.turn_off_ultrasonic_safety(True)
+        #     self.turn_off_front_depth_safety(True)
+        #     self.turn_off_back_scan_safety(False)
 
         rospy.sleep(1.0)
 

@@ -6,7 +6,7 @@ from std_msgs.msg import Bool
 from amr_msgs.msg import SafetyZone
 
 
-class SafetyZoneType():
+class SafetyZoneType:
 
     def __init__(self):
         self.is_running_ = False
@@ -14,14 +14,16 @@ class SafetyZoneType():
 
         # Publishers:
         self.safety_zone_type_pub_ = rospy.Publisher("safety_zone_type", SafetyZone, queue_size=5)
-        self.turn_off_front_depth_scan_pub_ = rospy.Publisher("turn_off_front_depth_safety", Bool, queue_size=5)
+        self.turn_off_front_depth_scan_pub_ = rospy.Publisher(
+            "turn_off_front_depth_safety", Bool, queue_size=5
+        )
 
         # Subscribers:
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
         rospy.Subscriber("/safety_filter/safety_state", Bool, self.safety_state_callback)
         rospy.Subscriber("turn_off_front_depth_autodock", Bool, self.turn_off_fd_autodock_cb)
-    
-    def runonce_callback(self, msg:Bool):
+
+    def runonce_callback(self, msg: Bool):
         self.is_running_ = msg.data
 
     def publish_zone_type(self, type):
@@ -48,7 +50,8 @@ class SafetyZoneType():
             self.turn_off_front_depth_scan_pub_.publish(False)
             rospy.loginfo("/safety_zone_type: Published big zone!")
 
-if __name__== '__main__':
+
+if __name__ == "__main__":
     rospy.init_node("safety_zone_type")
     try:
         safety_zone_type = SafetyZoneType()
@@ -57,4 +60,3 @@ if __name__== '__main__':
 
     except rospy.ROSInterruptException:
         pass
-        

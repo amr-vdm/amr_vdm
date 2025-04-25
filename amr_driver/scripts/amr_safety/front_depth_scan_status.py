@@ -7,30 +7,32 @@ from amr_msgs.msg import SafetyStatusStamped, SafetyStatus
 NO_OBSTACLE = 0
 OBSTACLE = 1
 
-class FrontDepthScannerSafety():
+
+class FrontDepthScannerSafety:
 
     def __init__(self):
         self.prev_obstacle_state_ = SafetyStatus.NORMAL
-        self.is_turn_off_ = False
-        self.is_running_  = False
-        self.is_pause_    = False
-        
+        self.is_turn_off_ = True
+        self.is_running_ = False
+        self.is_pause_ = False
+
         # Publishers:
-        self.front_depth_scanner_status_pub_ = rospy.Publisher("front_depth_scanner_status",
-                                                              SafetyStatusStamped, queue_size=5)
+        self.front_depth_scanner_status_pub_ = rospy.Publisher(
+            "front_depth_scanner_status", SafetyStatusStamped, queue_size=5
+        )
         # Subscribers:
         rospy.Subscriber("/front_camera/depth_scan/status", Int16, self.front_depth_scan_callback)
         rospy.Subscriber("turn_off_front_depth_safety", Bool, self.turn_off_front_depth_scanner)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
-        rospy.Subscriber('PAUSE_AMR', Bool, self.pause_callback)
+        rospy.Subscriber("PAUSE_AMR", Bool, self.pause_callback)
 
-    def pause_callback(self,msg: Bool):
+    def pause_callback(self, msg: Bool):
         self.is_pause_ = msg.data
-    
-    def runonce_callback(self,msg: Bool):
+
+    def runonce_callback(self, msg: Bool):
         self.is_running_ = msg.data
 
-    def turn_off_front_depth_scanner(self, msg:Bool):
+    def turn_off_front_depth_scanner(self, msg: Bool):
         self.is_turn_off_ = msg.data
         if msg.data:
             rospy.loginfo("/front_depth_scan_status: Disable obstacle detector!")
@@ -41,7 +43,7 @@ class FrontDepthScannerSafety():
 
         if self.is_turn_off_ or not self.is_running_:
             return
-        
+
         if not msg.data:
             obstacle_state = SafetyStatus.NORMAL
         else:
@@ -50,7 +52,7 @@ class FrontDepthScannerSafety():
         if obstacle_state != self.prev_obstacle_state_:
             if not self.is_pause_:
                 if obstacle_state == SafetyStatus.PROTECTED:
-                    rospy.logwarn_throttle(1.0, "/front_depth_scan_status: Detect obstacle!")            
+                    rospy.logwarn_throttle(1.0, "/front_depth_scan_status: Detect obstacle!")
                 else:
                     rospy.loginfo_throttle(1.0, "/front_depth_scan_status: No obstacle in field.")
 
@@ -62,7 +64,7 @@ class FrontDepthScannerSafety():
             self.prev_obstacle_state_ = obstacle_state
 
 
-if __name__== '__main__':
+if __name__ == "__main__":
     rospy.init_node("front_depth_scanner_safety_status")
     try:
         front_depth_scanner_safety = FrontDepthScannerSafety()

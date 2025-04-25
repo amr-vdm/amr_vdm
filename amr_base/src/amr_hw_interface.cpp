@@ -345,7 +345,7 @@ namespace amr_base
                 // if (!breaker_state[i] && (i != 2)) {
                 if (!breaker_state[i]) {
                     // ROS_WARN("BREAKER: ON");
-                    // sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],0);
+                    sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],0);
                     breaker_state[i] = true;
                 }
             } else if (motor_speed[i] == 0 || hand_control) {
@@ -358,11 +358,11 @@ namespace amr_base
                 data_transmit[6 + i*8] = current_break_bytes[0];
                 data_transmit[7 + i*8] = current_break_bytes[1];
                 bit_breaker[i] = 1;
-                if (breaker_state[i]) {
-                    // ROS_WARN("BREAKER: OFF");
-                    sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],1);
-                    breaker_state[i] = false;
-                }  
+                // if (breaker_state[i]) {
+                //     // ROS_WARN("BREAKER: OFF");
+                //     sktcpclient_fx3u_.write_bit_FX3U('M',(uint32_t)bit_break_motor[i],1);
+                //     breaker_state[i] = false;
+                // }  
             } else {
                 uint8_t* speed_bytes_array = sktcpclient_fx3u_.convert_uint16_to_2uint8(abs(motor_speed[i]));
                 uint8_t speed_bytes[2] = {speed_bytes_array[0], speed_bytes_array[1]};
