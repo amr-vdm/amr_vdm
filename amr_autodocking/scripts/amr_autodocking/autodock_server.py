@@ -263,12 +263,6 @@ class AutoDockServer:
 
     def reset(self):
         self.publish_velocity()
-        # self.enable_line_detector("front", False)
-        # self.enable_line_detector("back", False)
-        # self.turn_off_back_scan_safety(False)
-        # self.turn_off_front_scan_safety(False)
-        # self.turn_off_ultrasonic_safety(False)
-        # self.turn_off_front_depth_safety(False)
 
     def waiting_dock_frame(self, rotate_to_dock):
         start_time = rospy.Time.now()

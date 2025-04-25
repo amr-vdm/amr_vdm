@@ -118,11 +118,9 @@ class AutoDockStateMachine(AutoDockServer):
 
         if mode == DockMode.MODE_UNDOCK:
             if self.goOutDock(mode, go_out_dock):
-                # self.reset()
                 self.set_state(DockState.IDLE, "/autodock_controller: Undock completed!")
                 return True
             else:
-                # self.reset()
                 self.set_state(DockState.ERROR, "/autodock_controller: Undock failed!")
                 return False
 
@@ -177,8 +175,6 @@ class AutoDockStateMachine(AutoDockServer):
                 and self.lastmile_dock(mode)
                 and self.cmd_slider_mortor(mode)
             ):
-                # if mode == DockMode.MODE_CHARGE:
-                #     self.reset()
                 self.set_state(DockState.IDLE, "/autodock_controller: Autodock completed!")
                 return True
 
@@ -207,7 +203,6 @@ class AutoDockStateMachine(AutoDockServer):
                 if not self.retry(self.cfg.parallel_frame):
                     break
 
-        # self.reset()
         return False
 
     def check_slider_sensor_state(
@@ -552,13 +547,6 @@ class AutoDockStateMachine(AutoDockServer):
         check_yaw_counter = 0
         check_y_counter = 0
 
-        # if mode == DockMode.MODE_CHARGE:
-        #     self.turn_off_front_scan_safety(True)
-        #     self.turn_off_front_depth_safety(True)
-        #     self.turn_off_ultrasonic_safety(True)
-
-        # self.turn_off_back_scan_safety(False)
-
         while not rospy.is_shutdown():
             if self.check_cancel():
                 return False
@@ -685,7 +673,6 @@ class AutoDockStateMachine(AutoDockServer):
         self.set_state(DockState.STEER_DOCK, "Running!")
 
         if mode == DockMode.MODE_CHARGE:
-            # self.turn_off_front_scan_safety(True)
             if not self.steer_to_charger(self.cfg.max_x_pid_steer, self.cfg.min_x_pid_steer):
                 return False
         else:
@@ -756,18 +743,6 @@ class AutoDockStateMachine(AutoDockServer):
             return True
 
         self.brake(False)
-        # if go_out_dock[0].value > 0:
-        #     self.turn_off_back_scan_safety(True)
-        #     self.turn_off_front_scan_safety(False)
-        #     self.turn_off_ultrasonic_safety(False)
-        #     self.turn_off_front_depth_safety(False)
-        # else:
-        #     self.turn_off_front_scan_safety(True)
-        #     self.turn_off_ultrasonic_safety(True)
-        #     self.turn_off_front_depth_safety(True)
-        #     self.turn_off_back_scan_safety(False)
-
-        rospy.sleep(1.0)
 
         for action in go_out_dock:
             if action.action_type == DockParam.TYPE_ROTATE:
