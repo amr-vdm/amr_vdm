@@ -11,8 +11,6 @@ class Parameter():
     PLC_IP_address = '192.168.0.250'
     obstacle_detecting_bit = "M4"
     safety_zone_bit = "M28"
-    initialpose_bit = "M406"
-    initialposeError_bit= "M416"
     brake_bit = "M161"
     runonce_bit = "M8"
     start_bit = "M405"
@@ -56,7 +54,6 @@ class PCWritePLC(Type1E):
         rospy.Subscriber("status_protected_field",Bool,self.protected_field_callback)
         rospy.Subscriber("cmd_brake",Bool, self.brake_callback)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
-        rospy.Subscriber("is_intialpose", Bool, self.is_initialpose_callback)
         rospy.Subscriber("safety_zone_type", SafetyZone, self.safety_zone_type_callback)
         rospy.Subscriber("light_status", LightMode, self.light_mode_callback)
         rospy.Subscriber("error_mode", ErrorStamped, self.error_mode_callback)
@@ -120,12 +117,6 @@ class PCWritePLC(Type1E):
         elif (msg.zone == SafetyZone.BIG_ZONE):
             self.batchwrite_bitunits(self.params.safety_zone_bit, [0,1])
             rospy.loginfo("/PC_WRITE_PLC: Switched back and front safety zone to default zone!")
-
-    def is_initialpose_callback(self, msg: Bool):
-        if msg.data:
-            self.batchwrite_bitunits(self.params.initialpose_bit, [0])         # M406
-        else:
-            self.batchwrite_bitunits(self.params.initialposeError_bit,[1]) # M416
 
     def brake_callback(self, msg: Bool):
         self.brake_cmd = msg.data

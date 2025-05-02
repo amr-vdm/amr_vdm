@@ -35,6 +35,8 @@ add_message_files(
 add_service_files(
   FILES
   ChangeFloor.srv
+  RecordTagPose.srv
+  SetInitialPose.srv
 )
 
 ## Generate added messages and services with any dependencies listed here

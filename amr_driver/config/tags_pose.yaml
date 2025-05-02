@@ -1,0 +1,130 @@
+tag_frame_50:
+  frame_id: tag_frame_50
+  level: L2
+  qw: -0.03
+  qx: 0.04
+  qy: 0.0
+  qz: 1.0
+  x: 110.29
+  y: 31.33
+  z: 0.49
+tag_frame_51:
+  frame_id: tag_frame_51
+  level: L1
+  qw: 1.0
+  qx: 0.01
+  qy: -0.02
+  qz: -0.08
+  x: 20.14
+  y: 54.56
+  z: 0.5
+tag_frame_52:
+  frame_id: tag_frame_52
+  level: L1
+  qw: -0.75
+  qx: 0.01
+  qy: 0.01
+  qz: 0.66
+  x: 73.76
+  y: 64.25
+  z: 0.53
+tag_frame_53:
+  frame_id: tag_frame_53
+  level: L1
+  qw: -0.73
+  qx: 0.02
+  qy: 0.02
+  qz: 0.68
+  x: 23.46
+  y: 64.26
+  z: 0.52
+tag_frame_54:
+  frame_id: tag_frame_54
+  level: L1
+  qw: -1.0
+  qx: 0.0
+  qy: 0.04
+  qz: -0.04
+  x: 91.74
+  y: 46.56
+  z: 0.5
+tag_frame_55:
+  frame_id: tag_frame_55
+  level: L1
+  qw: 0.72
+  qx: 0.01
+  qy: -0.01
+  qz: -0.69
+  x: 15.14
+  y: 59.75
+  z: 0.62
+tag_frame_56:
+  frame_id: tag_frame_56
+  level: L1
+  qw: -0.04
+  qx: 0.03
+  qy: 0.01
+  qz: 1.0
+  x: 87.28
+  y: 44.37
+  z: 0.52
+tag_frame_57:
+  frame_id: tag_frame_57
+  level: L1
+  qw: -1.0
+  qx: -0.02
+  qy: 0.02
+  qz: -0.03
+  x: 64.98
+  y: 37.45
+  z: 0.54
+tag_frame_58:
+  frame_id: tag_frame_58
+  level: L2
+  qw: -1.0
+  qx: -0.01
+  qy: 0.01
+  qz: -0.01
+  x: 19.67
+  y: 62.03
+  z: 0.59
+tag_frame_59:
+  frame_id: tag_frame_59
+  level: L2
+  qw: -0.74
+  qx: 0.0
+  qy: 0.02
+  qz: 0.67
+  x: 55.69
+  y: 64.24
+  z: 0.56
+tag_frame_68:
+  frame_id: tag_frame_68
+  level: L2
+  qw: -0.72
+  qx: -0.0
+  qy: 0.01
+  qz: 0.69
+  x: 91.85
+  y: 64.52
+  z: 0.6
+tag_frame_69:
+  frame_id: tag_frame_69
+  level: L2
+  qw: 0.03
+  qx: -0.02
+  qy: -0.02
+  qz: -1.0
+  x: 109.62
+  y: 46.54
+  z: 0.53
+tag_frame_70:
+  frame_id: tag_frame_70
+  level: L2
+  qw: 0.67
+  qx: 0.02
+  qy: 0.0
+  qz: 0.74
+  x: 82.93
+  y: 37.46
+  z: 0.54

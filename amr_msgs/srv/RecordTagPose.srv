@@ -1,0 +1,9 @@
+# Request
+
+---
+# Response
+uint8 result
+uint8 FAILURE = 0
+uint8 SUCCESS = 1
+uint8 NO_TAG_DETECTED = 2
+int16 tag_id

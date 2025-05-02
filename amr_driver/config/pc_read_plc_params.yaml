@@ -6,3 +6,8 @@ right_ultrasonic_frame: right_ultrasonic_link
 min_range: 0.065
 max_range: 0.35
 field_of_view: 0.05236
+initialpose_bit: M406
+initialpose_response_reg: D851
+record_tag_pose_bit: M416
+record_tag_response_reg: D850
+
