@@ -262,7 +262,7 @@ class AutoDockStateMachine(AutoDockServer):
                 self.publish_velocity()
 
                 if not self.move_with_odom(
-                    self.cfg.min_linear_vel, self.cfg.max_linear_vel, -0.5
+                    self.cfg.min_linear_vel, self.cfg.max_linear_vel_predock, -0.5
                 ) and not self.pre_dock(DockMode.MODE_CHARGE):
                     rospy.logerr("/autodock_controller: Can't execute after recovery!")
                     return False
