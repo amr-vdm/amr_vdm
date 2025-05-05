@@ -61,6 +61,7 @@ class UltrasonicSafety:
         while not rospy.is_shutdown():
             if not self.is_running_ or self.turn_off_ultrasonic_safety_:
                 self.obstacle_state_ = SafetyStatus.NORMAL
+                self.prev_obstacle_state_ = SafetyStatus.NORMAL
             else:
                 if self.safety_zone_type_ == SafetyZone.SMALL_ZONE:
                     if (

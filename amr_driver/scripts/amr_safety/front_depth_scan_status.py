@@ -42,6 +42,7 @@ class FrontDepthScannerSafety:
     def front_depth_scan_callback(self, msg: Int16):
 
         if self.is_turn_off_ or not self.is_running_:
+            self.prev_obstacle_state_ = SafetyStatus.NORMAL
             return
 
         if not msg.data:

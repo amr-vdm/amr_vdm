@@ -45,6 +45,7 @@ class FrontScannerSafety:
     def front_safety_state_callback(self, msg: OutputPathsMsg):
 
         if self.is_turn_off_ or not self.is_running_:
+            self.prev_obstacle_state_ = SafetyStatus.NORMAL
             return
 
         if not msg.status[0]:
