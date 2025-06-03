@@ -10,4 +10,5 @@ initialpose_bit: M406
 initialpose_response_reg: D851
 record_tag_pose_bit: M416
 record_tag_response_reg: D850
+handle_error_reg: D650
 

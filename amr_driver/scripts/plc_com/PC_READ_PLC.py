@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Bool, Empty
+from std_msgs.msg import Bool, Int16, Empty
 from sensor_msgs.msg import Range, BatteryState
 from amr_msgs.msg import SliderSensorStamped
-from amr_msgs.srv import RecordTagPose, SetInitialPose, SetInitialPoseRequest, SetInitialPoseResponse
+from amr_msgs.srv import (
+    RecordTagPose,
+    SetInitialPose,
+    SetInitialPoseRequest,
+    SetInitialPoseResponse,
+)
 from amr_driver.mcprotocol.type1e import Type1E
 
-class Parameter():
+
+class Parameter:
     PLC_port = 8001
-    PLC_IP_address = '192.168.0.250'
+    PLC_IP_address = "192.168.0.250"
     pub_frequency = 10
-    left_ultrasonic_frame = 'left_ultrasonic_link'
-    right_ultrasonic_frame = 'right_ultrasonic_link'
+    left_ultrasonic_frame = "left_ultrasonic_link"
+    right_ultrasonic_frame = "right_ultrasonic_link"
     min_range = 0.065
     max_range = 0.35
     field_of_view = 0.05236
@@ -20,11 +26,13 @@ class Parameter():
     initialpose_response_reg = "M700"
     record_tag_pose_bit = "M416"
     record_tag_response_reg = "D100"
+    handle_error_reg = "D200"
+
 
 class PCReadPLC(Type1E):
 
     def __init__(self):
-        
+
         super().__init__()
         rospy.init_node("PC_read_PLC")
 
@@ -32,35 +40,41 @@ class PCReadPLC(Type1E):
         self.initParams()
 
         self.rate = rospy.Rate(self.params.pub_frequency)
-        
+
         # Connect to PLC
         self.connect_PLC(self.params.PLC_IP_address, self.params.PLC_port)
         if self._is_connected:
             rospy.loginfo("/PC_READ_PLC: Connected to PLC.")
         else:
-            rospy.logerr("/PC_READ_PLC: Can't connect to PLC! Please check IP address or Port again!")
+            rospy.logerr(
+                "/PC_READ_PLC: Can't connect to PLC! Please check IP address or Port again!"
+            )
 
         # Only Publishers:
-        self.pub_left_ultrasonic      = rospy.Publisher("left_ultrasonic/range", Range, queue_size=5)
-        self.pub_right_ultrasonic     = rospy.Publisher("right_ultrasonic/range", Range, queue_size=5)
-        self.pub_cmd_cancel_AMR       = rospy.Publisher("CANCEL_AMR", Bool,queue_size=5)
-        self.pub_cmd_pause_AMR        = rospy.Publisher("PAUSE_AMR", Bool, queue_size=5)
-        self.pub_cmd_reset_AMR        = rospy.Publisher("RESET_AMR", Empty, queue_size=1)
-        self.pub_stop_amr             = rospy.Publisher("STOP_AMR", Bool, queue_size=1)
-        self.pub_hand_control         = rospy.Publisher("HAND_CONTROL_AMR", Bool, queue_size=5)
-        self.pub_EMS                  = rospy.Publisher("emergency_stop", Bool, queue_size=5)
-        self.pub_cart_sensor          = rospy.Publisher("cart_sensor_state", SliderSensorStamped, queue_size=5)
-        self.pub_max_slider           = rospy.Publisher("slider_sensor_state", SliderSensorStamped, queue_size=5)
+        self.pub_left_ultrasonic = rospy.Publisher("left_ultrasonic/range", Range, queue_size=5)
+        self.pub_right_ultrasonic = rospy.Publisher("right_ultrasonic/range", Range, queue_size=5)
+        self.pub_cmd_cancel_AMR = rospy.Publisher("CANCEL_AMR", Bool, queue_size=5)
+        self.pub_cmd_pause_AMR = rospy.Publisher("PAUSE_AMR", Bool, queue_size=5)
+        self.pub_cmd_reset_AMR = rospy.Publisher("RESET_AMR", Int16, queue_size=1)
+        self.pub_stop_amr = rospy.Publisher("STOP_AMR", Bool, queue_size=1)
+        self.pub_hand_control = rospy.Publisher("HAND_CONTROL_AMR", Bool, queue_size=5)
+        self.pub_EMS = rospy.Publisher("emergency_stop", Bool, queue_size=5)
+        self.pub_cart_sensor = rospy.Publisher(
+            "cart_sensor_state", SliderSensorStamped, queue_size=5
+        )
+        self.pub_max_slider = rospy.Publisher(
+            "slider_sensor_state", SliderSensorStamped, queue_size=5
+        )
         self.pub_pickup_current_state = rospy.Publisher("pickup_current_state", Bool, queue_size=1)
-        self.pub_drop_current_state   = rospy.Publisher("drop_current_state", Bool, queue_size=1)
-        self.pub_battery_state        = rospy.Publisher("/battery_state", BatteryState, queue_size=5)
-        self.pub_hand_dock_trigger    = rospy.Publisher("hand_dock_trigger", Empty, queue_size=1)
-        self.pub_is_initial_pose      = rospy.Publisher("is_intialpose", Bool, queue_size=5)
+        self.pub_drop_current_state = rospy.Publisher("drop_current_state", Bool, queue_size=1)
+        self.pub_battery_state = rospy.Publisher("/battery_state", BatteryState, queue_size=5)
+        self.pub_hand_dock_trigger = rospy.Publisher("hand_dock_trigger", Empty, queue_size=1)
+        self.pub_is_initial_pose = rospy.Publisher("is_intialpose", Bool, queue_size=5)
 
         # Subcribers:
         rospy.Subscriber("wait_dock_frame", Bool, self.waitDockFrameCB)
         rospy.Subscriber("state_runonce_nav", Bool, self.runOnceStateCB)
-        
+
         # Avariables:
         self.is_runonce_NAV = False
         self.Emergency_STOP_state = 0
@@ -73,26 +87,30 @@ class PCReadPLC(Type1E):
         self.pickup_current_state = 0
         self.drop_current_state = 0
         self.wait_dock_state = 0
-        self.cart_sensor_state = [0,0]
-        self.slider_sensor_state = [0,0]
+        self.cart_sensor_state = [0, 0]
+        self.slider_sensor_state = [0, 0]
         self.sensor_state_array = SliderSensorStamped()
 
         self.isPubWaitDockBit = False
 
     def initParams(self):
         print("/PC_READ_PLC: Parameters:")
-
-        param_names = [attr for attr in dir(self.params) if not callable(getattr(self.params, attr)) and not attr.startswith("__")]
+        param_names = [
+            attr
+            for attr in dir(self.params)
+            if not callable(getattr(self.params, attr)) and not attr.startswith("__")
+        ]
 
         # get private rosparam, if none use default
         for param_name in param_names:
-            param_val = rospy.get_param(rospy.get_name() + "/" + param_name, getattr(self.params, param_name))
+            param_val = rospy.get_param(
+                rospy.get_name() + "/" + param_name, getattr(self.params, param_name)
+            )
             print(f"* /{param_name}: {param_val}")
             setattr(self.params, param_name, param_val)
 
     def handleUltrasonicSensor(self, data):
-
-        for i in range(0,len(data)):
+        for i in range(0, len(data)):
             data_msg = Range()
             data_msg.header.stamp = rospy.Time.now()
             data_msg.radiation_type = 0
@@ -104,7 +122,7 @@ class PCReadPLC(Type1E):
             # elif data[i] <= 5:
             #     data_msg.range = float("-Inf")
             # else:
-            #     data_msg.range = (65 + 0.07125 * data[i]) / 1000 
+            #     data_msg.range = (65 + 0.07125 * data[i]) / 1000
 
             # if i == 0:
             #     data_msg.header.frame_id = self.params.left_ultrasonic_frame
@@ -117,7 +135,7 @@ class PCReadPLC(Type1E):
             self.pub_left_ultrasonic.publish(data_msg)
             data_msg.header.frame_id = self.params.right_ultrasonic_frame
             self.pub_right_ultrasonic.publish(data_msg)
-   
+
     def handle_battery_publisher(self, data: list, charging: int):
         # data[0]: voltage cell 1     (mV)
         # data[1]: voltage cell 2     (mV)
@@ -168,7 +186,9 @@ class PCReadPLC(Type1E):
             resp = set_ip_with_tag_cli_.call(req)
             return resp.result
         except (rospy.ROSException, rospy.ServiceException, rospy.ROSInterruptException) as e:
-            rospy.logerr(f"/PC_READ_PLC: {ip_service_name} service is not available or call failed! ({e})")
+            rospy.logerr(
+                f"/PC_READ_PLC: {ip_service_name} service is not available or call failed! ({e})"
+            )
             return SetInitialPoseResponse.FAILURE
 
     def handle_record_tag_pose(self):
@@ -178,15 +198,17 @@ class PCReadPLC(Type1E):
             resp = record_tag_pose_cli_.call()
             return resp
         except (rospy.ROSException, rospy.ServiceException, rospy.ROSInterruptException) as e:
-            rospy.logerr("/PC_READ_PLC: record_tag_pose service is not available or call failed! (%s)" % e)
+            rospy.logerr(
+                "/PC_READ_PLC: record_tag_pose service is not available or call failed! (%s)" % e
+            )
             return None
 
-    def waitDockFrameCB(self, msg:Bool):
+    def waitDockFrameCB(self, msg: Bool):
         self.isPubWaitDockBit = msg.data
 
     def runOnceStateCB(self, msg: Bool):
         self.is_runonce_NAV = msg.data
-        if (not msg.data and self.Pause_AMR_state):
+        if not msg.data and self.Pause_AMR_state:
             self.Pause_AMR_state = 0
             self.pause_timer = 0
             self.pub_cmd_pause_AMR.publish(False)
@@ -211,7 +233,6 @@ class PCReadPLC(Type1E):
             # bit_array[14] - M414: wait_dock bit
             # bit_array[15] - M415: battery_is_charging bit
             # bit_array[16] - M416: record_tag_pose bit
-
             bit_array = self.batchread_bitunits("M400", 17)
 
             # reg_array[0]  - D600: ultrasonic sensor left
@@ -236,7 +257,7 @@ class PCReadPLC(Type1E):
             self.handle_battery_publisher(reg_array[2:17], bit_array[15])
 
             # bit_array[0] - M400: EMS bit
-            if (bit_array[0] != self.Emergency_STOP_state):
+            if bit_array[0] != self.Emergency_STOP_state:
                 if bit_array[0]:
                     rospy.logerr("/PC_READ_PLC: EMS is ON!")
                     self.pub_stop_amr.publish(True)
@@ -248,7 +269,7 @@ class PCReadPLC(Type1E):
                     self.pub_stop_amr.publish(False)
                     self.pub_EMS.publish(False)
                     self.Emergency_STOP_state = 0
-            
+
             if self.is_runonce_NAV:
                 if not bit_array[11]:
                     # bit_array[2] - M402: pause bit
@@ -260,8 +281,8 @@ class PCReadPLC(Type1E):
                             self.Pause_AMR_state = 1
 
                         elif self.pause_timer <= self.pause_off_delay:
-                            self.pause_timer += (1 / self.params.pub_frequency)
-                            
+                            self.pause_timer += 1 / self.params.pub_frequency
+
                         else:
                             rospy.loginfo("/PC_READ_PLC: Pause is OFF.")
                             self.pub_cmd_pause_AMR.publish(False)
@@ -282,10 +303,10 @@ class PCReadPLC(Type1E):
                             self.pickup_current_state = bit_array[4]
                         else:
                             self.pickup_current_state = 0
-                    
+
                     # bit_array[12] - M412: high dropoff current bit
-                    elif (bit_array[12] != self.drop_current_state):
-                        if (bit_array[12]):
+                    elif bit_array[12] != self.drop_current_state:
+                        if bit_array[12]:
                             self.pub_drop_current_state.publish(True)
                             self.drop_current_state = bit_array[12]
                         else:
@@ -298,7 +319,7 @@ class PCReadPLC(Type1E):
 
             # bit_array[6] - M406: initialpose bit
             if bit_array[6]:
-                pose_id, floor_id = self.batchread_wordunits("D501",2)
+                pose_id, floor_id = self.batchread_wordunits("D501", 2)
                 setIP_result = self.handle_set_initial_pose(pose_id, floor_id)
                 self.batchwrite_wordunits(self.params.initialpose_response_reg, [setIP_result])
                 if setIP_result == SetInitialPoseResponse.SUCCESS:
@@ -308,7 +329,7 @@ class PCReadPLC(Type1E):
                 self.batchwrite_bitunits(self.params.initialpose_bit, [0])
 
             # bit_array[7] - M407: left_cart_sensor
-            # bit_array[8] - M408: right_cart_sensor   
+            # bit_array[8] - M408: right_cart_sensor
             if bit_array[7:9] != self.cart_sensor_state:
                 self.sensor_state_array.header.stamp = rospy.Time.now()
                 self.sensor_state_array.sensor_state.sensor_name = ["left_cart, right_cart"]
@@ -331,10 +352,10 @@ class PCReadPLC(Type1E):
                 self.hand_control_state = bit_array[11]
 
             # bit_array[13] - M413: reset_bit
-            if (bit_array[13] != self.RESET_AMR_state):
+            if bit_array[13] != self.RESET_AMR_state:
                 if bit_array[13]:
-                    msg = Empty()
-                    self.pub_cmd_reset_AMR.publish(msg)
+                    behavior = self.batchread_wordunits(self.params.handle_error_reg, 1)[0]
+                    self.pub_cmd_reset_AMR.publish(behavior)
                     rospy.loginfo("/PC_READ_PLC: Reset AMR.")
                 self.RESET_AMR_state = bit_array[13]
 
@@ -349,7 +370,10 @@ class PCReadPLC(Type1E):
             if bit_array[16]:
                 resultRecord = self.handle_record_tag_pose()
                 if resultRecord is not None:
-                    self.batchwrite_wordunits(self.params.record_tag_response_reg, [resultRecord.result, resultRecord.tag_id])
+                    self.batchwrite_wordunits(
+                        self.params.record_tag_response_reg,
+                        [resultRecord.result, resultRecord.tag_id],
+                    )
                 else:
                     self.batchwrite_wordunits(self.params.record_tag_response_reg, [0, 0])
                 self.batchwrite_bitunits(self.params.record_tag_pose_bit, [0])
@@ -357,8 +381,9 @@ class PCReadPLC(Type1E):
             self.rate.sleep()
 
         self.close()
-        
-if __name__== '__main__':
+
+
+if __name__ == "__main__":
     try:
         PC_bridge_PLC = PCReadPLC()
         rospy.loginfo("%s node is running!", rospy.get_name())
