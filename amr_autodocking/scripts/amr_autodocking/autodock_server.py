@@ -248,7 +248,7 @@ class AutoDockServer:
             "slider_sensor_state", SliderSensorStamped, self.slider_sensor_state_callback
         )
         rospy.Subscriber("status_protected_field", Bool, self.protected_field_callback)
-        rospy.Subscriber("back_scan_rep177", LaserScan, self.laser_scan_callback)
+        rospy.Subscriber("back_scan", LaserScan, self.laser_scan_callback)
 
         # Autodock action
         if run_server:

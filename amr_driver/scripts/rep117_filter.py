@@ -8,8 +8,13 @@ from sensor_msgs.msg import LaserScan
 class rep117_filter_laser():
     def __init__(self):
         self.pub = rospy.Publisher('scan_filtered', LaserScan, queue_size=10)
+        rospy.Subscriber('enable_rep117_filter', Bool, self.enable_filter_callback)
         rospy.Subscriber('scan', LaserScan, self.callback)
 
+        self.enable_filter = True
+    
+    def enable_filter_callback(self, msg: Bool):
+        self.enable_filter = msg.data
 
     def callback(self, msg:LaserScan):
         """
@@ -18,13 +23,12 @@ class rep117_filter_laser():
         """
         ranges_out = []
         for dist in msg.ranges:
-            # if dist == 0.0 :
-            if dist > msg.range_max:
+            if not self.enable_filter:
                 ranges_out.append(float("inf"))
-
+            elif dist > msg.range_max:
+                ranges_out.append(float("inf"))
             elif dist < msg.range_min:
                 ranges_out.append(float("-inf"))
-
             else:
                 ranges_out.append(dist)
 

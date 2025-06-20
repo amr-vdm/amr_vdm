@@ -23,10 +23,10 @@ class Controller():
         self.move_base_client.wait_for_server()
         self.auto_dock_client = actionlib.SimpleActionClient("autodock_action", AutoDockingAction)
         self.auto_dock_client.wait_for_server()
-
-        self.client_global_costmap = dc.Client("/move_base_node/global_costmap/obstacles")
-        self.client_local_costmap  = dc.Client("/move_base_node/local_costmap/obstacles")
         
+        # Publishers:
+        self.enable_lsr117f_pub = rospy.Publisher("/enable_rep117_filter", Bool, queue_size=10)
+
         # Subscribers:
         rospy.Subscriber("CANCEL_AMR", Bool, self.cancel_callback)
         rospy.Subscriber("PAUSE_AMR", Bool, self.pause_callback)
@@ -48,12 +48,10 @@ class Controller():
                 self.auto_dock_client.cancel_all_goals()
                 return
 
-    def enable_costmap_layer(self, data):
-        rospy.loginfo("/amr_controller: Enable costmap layer.") if data else \
-        rospy.loginfo("/amr_controller: Disable costmap layer.")
-
-        self.client_global_costmap.update_configuration({'enabled': data})
-        self.client_local_costmap.update_configuration({'enabled': data})
+    def enable_costmap_layer(self, data: bool):
+        rospy.loginfo("/amr_controller: Enable source detect obstacle.") if data else \
+        rospy.loginfo("/amr_controller: Disable source detect obstacle.")
+        self.enable_lsr117f_pub.publish(data)
 
     def update_configuration(self, timeout_mvb, enable_costmap_layer:bool):
         client_movebase_timeout = dc.Client("/move_base_node")

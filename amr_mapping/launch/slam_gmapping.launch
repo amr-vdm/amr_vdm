@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="rviz_file" default="$(find amr_mapping)/rviz/mapping.rviz"/>
+    <arg name="scan_topic" default="/front_scan"/>
 
     <!-- Launch gmapping node -->
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">	
-        <rosparam file="$(find amr_mapping)/params/gmapping.yaml" command="load" /> 
-        
-        <remap from="scan" to="/front_scan_rep117"/>
+        <rosparam file="$(find amr_mapping)/params/gmapping.yaml" command="load" />
+        <remap from="scan" to="$(arg scan_topic)"/>
     </node>
 
     <!-- Launch Rviz -->

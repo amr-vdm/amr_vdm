@@ -46,7 +46,9 @@
         output="screen" ns ="$(arg namespace)"/>
 
     <!-- LAUNCH MAPPING NODE -->
-    <include file="$(find amr_mapping)/launch/slam_gmapping.launch" />
+    <include file="$(find amr_mapping)/launch/slam_gmapping.launch">
+        <arg name="scan_topic"   value="/amr/front_scan" />
+    </include>
     <!-- <include file="$(find amr_mapping)/launch/hector_mapping.launch" /> -->
 
     <!--=== LAUNCH OTHER NODES ===-->

@@ -12,7 +12,6 @@
 
     <node name="auto_dock_node" pkg="amr_autodocking" type="autodock_controller.py" 
           ns="$(arg namespace)" output="screen">
-          <remap from="/amr/back_scan_rep177" to="/back_scan_rep117"/>
           <rosparam command="load" file="$(find amr_autodocking)/config/autodock_params.yaml"/>
     </node>
     
