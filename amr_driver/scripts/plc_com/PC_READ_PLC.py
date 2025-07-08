@@ -53,7 +53,7 @@ class PCReadPLC(Type1E):
         # Only Publishers:
         self.pub_left_ultrasonic = rospy.Publisher("left_ultrasonic/range", Range, queue_size=5)
         self.pub_right_ultrasonic = rospy.Publisher("right_ultrasonic/range", Range, queue_size=5)
-        self.pub_cmd_cancel_AMR = rospy.Publisher("CANCEL_AMR", Bool, queue_size=5)
+        self.pub_system_error = rospy.Publisher("SYSTEM_ERROR", Bool, queue_size=5)
         self.pub_cmd_pause_AMR = rospy.Publisher("PAUSE_AMR", Bool, queue_size=5)
         self.pub_cmd_reset_AMR = rospy.Publisher("RESET_AMR", Int16, queue_size=1)
         self.pub_stop_amr = rospy.Publisher("STOP_AMR", Bool, queue_size=1)
@@ -78,6 +78,7 @@ class PCReadPLC(Type1E):
         # Avariables:
         self.is_runonce_NAV = False
         self.Emergency_STOP_state = 0
+        self.SYSTEM_ERROR_state = 0
         self.START_state = 0
         self.Pause_AMR_state = 0
         self.RESET_AMR_state = 0
@@ -219,7 +220,7 @@ class PCReadPLC(Type1E):
             # bit_array[0]  - M400: EMS bit
             # bit_array[1]  - M401: plc_control bit
             # bit_array[2]  - M402: pause bit
-            # bit_array[3]  - M403: cancel bit
+            # bit_array[3]  - M403: system error bit
             # bit_array[4]  - M404: high current pickup bit
             # bit_array[5]  - M405: start bit
             # bit_array[6]  - M406: initialpose bit
@@ -291,10 +292,15 @@ class PCReadPLC(Type1E):
                     else:
                         self.pause_timer = 0
 
-                    # bit_array[3] - M403: cancel bit
-                    if bit_array[3]:
-                        rospy.loginfo("/PC_READ_PLC: Pressed cancel.")
-                        self.pub_cmd_cancel_AMR.publish(True)
+                    # bit_array[3] - M403: system error bit
+                    if bit_array[3] != self.SYSTEM_ERROR_state:
+                        if bit_array[3]:
+                            rospy.logerr("/PC_READ_PLC: System error detected!")
+                            self.pub_system_error.publish(True)
+                            self.SYSTEM_ERROR_state = 1
+                        else:
+                            self.SYSTEM_ERROR_state = 0
+                            self.pub_system_error.publish(False)
 
                     # bit_array[4] - M404: high pickup current bit
                     if bit_array[4] != self.pickup_current_state:

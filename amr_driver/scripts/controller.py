@@ -19,16 +19,10 @@ class Controller():
         self.obstacle_detected_ = False
         self.prev_state_ = False
 
-        self.move_base_client = actionlib.SimpleActionClient("/move_base", MoveBaseAction)
-        self.move_base_client.wait_for_server()
-        self.auto_dock_client = actionlib.SimpleActionClient("autodock_action", AutoDockingAction)
-        self.auto_dock_client.wait_for_server()
-        
         # Publishers:
         self.enable_lsr117f_pub = rospy.Publisher("/enable_rep117_filter", Bool, queue_size=10)
 
         # Subscribers:
-        rospy.Subscriber("CANCEL_AMR", Bool, self.cancel_callback)
         rospy.Subscriber("PAUSE_AMR", Bool, self.pause_callback)
         rospy.Subscriber("status_protected_field",Bool,self.protected_field_callback)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
@@ -40,13 +34,6 @@ class Controller():
             self.obstacle_detected_ = False
             return
         self.obstacle_detected_ = msg.data
-    
-    def cancel_callback(self, msg: Bool):
-        if self.is_runonce_:
-            if msg.data:
-                self.move_base_client.cancel_all_goals()
-                self.auto_dock_client.cancel_all_goals()
-                return
 
     def enable_costmap_layer(self, data: bool):
         rospy.loginfo("/amr_controller: Enable source detect obstacle.") if data else \

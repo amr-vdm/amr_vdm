@@ -43,6 +43,7 @@
         <param name="cmd_breaker_topic" type="string" value="/amr/cmd_brake"/>
         <param name="mode_error_topic" type="string" value="/amr/error_mode"/>
         <param name="emergency_stop_topic" type="string" value="/amr/emergency_stop"/>
+        <param name="system_error_topic" type="string" value="/amr/SYSTEM_ERROR"/>
         <param name="battery_state_topic" type="string" value="/battery_state"/>
         <param name="floor_name_topic" type="string" value="/amr/floor_name"/>
         <param name="avoid_obstacles_topic" type="string" value="/amr/avoid_obstacles"/>

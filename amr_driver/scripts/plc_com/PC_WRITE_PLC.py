@@ -58,7 +58,6 @@ class PCWritePLC(Type1E):
         rospy.Subscriber("cmd_brake", Bool, self.brake_callback)
         rospy.Subscriber("state_runonce_nav", Bool, self.runonce_callback)
         rospy.Subscriber("safety_zone_type", SafetyZone, self.safety_zone_type_callback)
-        rospy.Subscriber("light_status", LightMode, self.light_mode_callback)
         rospy.Subscriber("error_mode", ErrorStamped, self.error_mode_callback)
         rospy.Subscriber("cmd_slider", Int16, self.cmd_slider_callback)
         rospy.Subscriber("/camera_finished", Bool, self.all_done_callback)
@@ -139,10 +138,6 @@ class PCWritePLC(Type1E):
             self.batchwrite_bitunits(self.params.runonce_bit, [1])  # M8
         else:
             self.batchwrite_bitunits(self.params.runonce_bit, [0])
-
-    def light_mode_callback(self, msg: LightMode):
-        mode = msg.lightMode
-        self.batchwrite_wordunits("D201", [mode])
 
     def error_mode_callback(self, msg: ErrorStamped):
         error = msg.error
